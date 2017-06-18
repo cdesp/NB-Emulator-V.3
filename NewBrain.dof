@@ -1,0 +1,91 @@
+[Compiler]
+A=1
+B=0
+C=1
+D=1
+E=0
+F=0
+G=1
+H=1
+I=1
+J=1
+K=0
+L=1
+M=0
+N=1
+O=0
+P=1
+Q=0
+R=0
+S=0
+T=0
+U=0
+V=0
+W=0
+X=1
+Y=2
+Z=1
+ShowHints=1
+ShowWarnings=1
+UnitAliases=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;
+[Linker]
+MapFile=0
+OutputObjs=0
+ConsoleApp=1
+DebugInfo=0
+RemoteSymbols=0
+MinStackSize=16384
+MaxStackSize=8388608
+ImageBase=4194304
+ExeDescription=NewBrain Emulator Pro
+[Directories]
+OutputDir=$(ProgramFiles)\borland\delphi5\Projects\EMUL\EMUL\RAIZE\runtime
+UnitOutputDir=
+PackageDLLOutputDir=
+PackageDCPOutputDir=
+SearchPath=$(ProgramFiles)\borland\delphi5\Lib\Debug;$(ProgramFiles)\borland\delphi5\Lib\Debug;$(ProgramFiles)\borland\delphi5\Lib\Debug
+Packages=vcl50
+Conditionals=
+DebugSourceDirs=
+UsePackages=0
+[Parameters]
+RunParams=
+HostApplication=
+[Version Info]
+IncludeVerInfo=1
+AutoIncBuild=1
+MajorVer=2
+MinorVer=3
+Release=0
+Build=21
+Debug=0
+PreRelease=0
+Special=0
+Private=0
+DLL=0
+Locale=1032
+CodePage=1253
+[Version Info Keys]
+CompanyName=DespSoft S.A.
+FileDescription=NewBrain Emulator Professional
+FileVersion=2.3.0.21
+InternalName=NewBrain
+LegalCopyright=(c) 2004 DespSoft S.A. 
+LegalTrademarks=(c) DespSoft S.A.
+OriginalFilename=NewBrain
+ProductName=Newbrain Emulator Professional
+ProductVersion=2.3.0.0
+Comments=
+LastCompiled=30-07-2004 21:43:20
+[Excluded Packages]
+$(DELPHI)\Projects\Bpl\JclDebugIde50.bpl=JCL Debug IDE extension for Delphi 5
+$(DELPHI)\Projects\Bpl\IdeOpenDlgFavorite50.bpl=JCL Open and Save IDE dialogs with favorite folders for Delphi 5
+$(DELPHI)\Bin\dclite50.bpl=Borland Integrated Translation Environment
+$(DELPHI)\Components\cbcomps\Lib\Delphi5\CBCD5.BPL=CB Comps for Delphi 5
+$(DELPHI)\Components\cbcomps\Lib\Delphi5\CBOMD5.BPL=CB Original Model Comps for Delphi 5
+[HistoryLists\hlUnitAliases]
+Count=1
+Item0=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;
+[HistoryLists\hlOutputDirectorry]
+Count=1
+Item0=..\Runtime\tools

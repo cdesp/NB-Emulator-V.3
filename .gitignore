@@ -1,0 +1,11 @@
+*.~dpr
+*.~dsk
+__history/
+*.~inc
+*.~dfm
+*.~pas
+*.dcu
+raze_old.pas
+Z80Package/__astcache/
+Z80Package/Win32/Debug/Z80Emulator.#00
+Win32/

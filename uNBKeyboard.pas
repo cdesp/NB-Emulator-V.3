@@ -1,0 +1,855 @@
+{
+    <Grundy NewBrain Emulator Pro Made by Despsoft>
+    Copyright (C) 2004  <Despinidis Chris>
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+}
+
+unit uNBKeyboard;
+
+interface
+uses classes;
+
+Type
+
+
+     TNbKeyBoard=Class
+
+
+
+     private
+       FNBSHIFTED: Boolean;
+       procedure Init;
+       procedure FillNBkeys;
+     Protected
+       AKey: string;
+       AShift: TShiftState;
+       AKeyInt: Word;
+       keymap:Array[0..1] of TStringlist;
+       NBKeys:Array[0..70] of Integer;
+
+       NBkeyList:TStringlist;
+
+     public
+
+       function TranslateChar(c:Char): Boolean;
+       function GetPCKeyID: string;
+       procedure PCKeyDown(var Key: Word; Shift: TShiftState);
+       procedure PCKeyUp(var Key: Word; Shift: TShiftState);
+       procedure NBAddKey;
+       function NBGetKey: Byte;
+       constructor Create; virtual;
+       destructor Destroy; override;
+       procedure Import(s:String);
+     published
+       property NBSHIFTED: Boolean read FNBSHIFTED write FNBSHIFTED;
+     End;
+
+
+procedure CheckKeyBoard;
+
+procedure FillCharArray;
+
+const
+  NB_1 = 9;
+  NB_2 = 8;
+  NB_3 = 7;
+  NB_4 = 6;
+  NB_5 = 5;
+  NB_6 = 4;
+  NB_7 = 3;
+  NB_8 = 19;
+  NB_9 = 20;
+  NB_0 = 21;
+  NB_A = 46;
+  NB_B = 56;
+  NB_C = 58;
+  NB_D = 44;
+  NB_E = 12;
+  NB_F = 43;
+  NB_G = 42;
+  NB_H = 41;
+  NB_I = 36;
+  NB_J = 51;
+  NB_K = 62;
+  NB_L = 39;
+  NB_M = 53;
+  NB_N = 52;
+  NB_O = 38;
+  NB_P = 26;
+  NB_Q = 14;
+  NB_R = 11;
+  NB_S = 45;
+  NB_T = 10;
+  NB_U = 35;
+  NB_V = 57;
+  NB_W = 13;
+  NB_X = 59;
+  NB_Y = 37;
+  NB_Z = 60;
+
+
+
+  NB_DOT = 55; // '.'
+  NB_EQU = 27; // '='
+  NB_NLN = 30; // <New Line>
+  NB_SPC = 15; // <Space>
+  NB_PLS = 29; // '+'
+  NB_LPR = 22; // '('
+  NB_RPR = 23; // ')'
+  NB_COM = 40; // ';'
+  NB_SLS = 47; // '/'
+  NB_HOM = 63; // or 50 <Home> cursor at 0,0
+  NB_BSP = 64; // or 65 <BackSpace>
+  NB_BSL = 92; // backslash
+  NB_GCM = 54; // ','
+  NB_MIN = 28; // '-'
+  NB_AFT =NB_2 or $40; // '"'
+  NB_INS = 61;
+  NB_ESC = 31;
+  NB_VID = 0; // VIDEO TEXT ???
+
+  NB_SHFT=-1;
+  NB_CTRL=-2;
+  NB_GRPH=-3;
+  NB_STOP=-4;
+  NB_REPT=-5;
+
+
+Const NON=0;
+      SHF=1;
+      GRF=2;
+      CTR=4;
+
+Var
+  A:Array[0..1,1..255] of byte;//keyb mapping
+
+  b:Array[0..20] of byte; //buffer
+
+  kcnt:Integer=0;
+  AkeyList:TStringlist;
+  AKey,prevkey: Word;
+  NBkey:Byte;
+  AShift: TShiftState;
+  doclear:boolean=false;
+  t22:integer=1;
+  rm:Integer=642;
+  cmd:Boolean=false;
+  Kbuf:String;
+  kbufc:Integer;
+  RShift: Boolean;
+
+  NBKeyBoard:TNbKeyBoard;
+
+
+
+implementation
+uses windows,sysutils,
+     New,uNbscreen,uNbMemory,uNBCop,forms,uNBio;
+
+Procedure Delay(n:Cardinal);
+Var lst:Cardinal;
+Begin
+   lst:=Gettickcount;
+   While Gettickcount-lst<n do
+    Application.processmessages;
+End;
+
+
+Procedure FillCharArray;
+Var
+    i,j:Integer;
+Begin
+ for j:=0 to 1 do
+  For i:=1 to 255 do
+   A[j,i]:=0;
+
+  A[0,8]:=NB_BSP;
+  A[0,13]:=NB_NLN;
+  A[0,27]:=nb_ESC;
+  A[0,32]:=nb_SPC;
+  A[0,33]:=0;//!
+  A[0,34]:=NB_AFT;
+  A[0,35]:=NB_3 or $40;
+  A[0,36]:=NB_HOM;
+  A[0,37]:=2;
+  A[0,38]:=50;
+  A[0,39]:=18;
+  A[0,40]:=34;
+  A[0,41]:=NB_RPR;
+  A[0,42]:=0;//'*'
+  A[0,43]:=NB_PLS;
+  A[0,44]:=NB_GCM;
+  A[0,45]:=NB_INS;//'-'
+  A[0,46]:=18 or $40; //del --> shift + r cursor
+  A[0,47]:=NB_SLS;
+  A[0,48]:=NB_0;
+  A[0,49]:=NB_1;
+  A[0,50]:=NB_2;
+  A[0,51]:=NB_3;
+  A[0,52]:=NB_4;
+  A[0,53]:=NB_5;
+  A[0,54]:=NB_6;
+  A[0,55]:=NB_7;
+  A[0,56]:=NB_8;
+  A[0,57]:=NB_9;
+  A[0,58]:=NB_COM or $40;//':'
+  A[0,59]:=NB_COM;
+  A[0,60]:=0;//<
+  A[0,61]:=NB_EQU;
+  A[0,62]:=0;//>
+  A[0,63]:=0;//?
+  A[0,64]:=0;//@
+  A[0,65]:=NB_A;
+  A[0,66]:=NB_B;
+  A[0,67]:=NB_C ;
+  A[0,68]:=NB_D ;
+  A[0,69]:=NB_E ;
+  A[0,70]:=NB_F ;
+  A[0,71]:=NB_G ;
+  A[0,72]:=NB_H ;
+  A[0,73]:=NB_I ;
+  A[0,74]:=NB_J ;
+  A[0,75]:=NB_K ;
+  A[0,76]:=NB_L ;
+  A[0,77]:=NB_M ;
+  A[0,78]:=NB_N ;
+  A[0,79]:=NB_O ;
+  A[0,80]:=NB_P ;
+  A[0,81]:=NB_Q ;
+  A[0,82]:=NB_R ;
+  A[0,83]:=NB_S ;
+  A[0,84]:=NB_T ;
+  A[0,85]:=NB_U ;
+  A[0,86]:=NB_V ;
+  A[0,87]:=NB_W ;
+  A[0,88]:=NB_X ;
+  A[0,89]:=NB_Y ;
+  A[0,90]:=NB_Z ;
+
+  A[0,96]:=NB_0 ;
+  A[0,97]:=NB_1 ;
+  A[0,98]:=NB_2 ;
+  A[0,99]:=NB_3 ;
+  A[0,100]:=NB_4 ;
+  A[0,101]:=NB_5 ;
+  A[0,102]:=NB_6 ;
+  A[0,103]:=NB_7 ;
+  A[0,104]:=NB_8 ;
+  A[0,105]:=NB_9 ;
+  A[0,106]:=NB_EQU-3 ; //*
+  A[0,107]:=NB_EQU+2 ; //-
+  A[0,109]:= NB_MIN;//+
+  A[0,110]:= NB_DOT;// .
+  A[0,111]:= NB_SLS;// /
+  A[0,191]:= NB_SLS;// /
+
+  A[0,186]:=NB_COM ; //;
+  A[0,187]:=NB_EQU ; //=
+  A[0,188]:=54 ; //,
+  A[0,189]:=NB_EQU+1 ;//-
+  A[0,190]:=55 ;//.
+  A[0,219]:=22 or $40 ;//[
+  A[0,220]:=NB_BSL ;//\
+  A[0,221]:=23 or $40 ;//]
+  A[0,222]:=NB_EQU+2 ;//+
+
+  //for right shift we change the mappings
+  //mainly for use of the PC buttons instead of
+  //newbrain i.e. R-Shft-9 gives '(' instead of ')'
+  For i:=1 to 255 do
+   A[1,i]:=a[0,i] or $40;
+
+  A[1,37]:=2 or $40;
+  A[1,38]:=50 or $40;
+  A[1,39]:=18 or $40;
+  A[1,40]:=34 or $40;
+  A[1,48]:=NB_9 or $40; // )
+  A[1,49]:=NB_1 or $40;
+  A[1,50]:=NB_EQU or $40;
+  A[1,51]:=NB_3 or $40;
+  A[1,52]:=NB_4 or $40;
+  A[1,53]:=NB_5 or $40;
+  A[1,54]:=0;   //^
+  A[1,55]:=NB_6 or $40;  // &
+  A[1,56]:=NB_EQU-3 ; //*
+  A[1,57]:=NB_8 or $40;   //(
+
+  A[1,65]:=NB_A or $40;
+  A[1,66]:=NB_B or $40;
+  A[1,67]:=NB_C or $40;
+  A[1,68]:=NB_D or $40;
+  A[1,69]:=NB_E or $40;
+  A[1,70]:=NB_F or $40;
+  A[1,71]:=NB_G or $40;
+  A[1,72]:=NB_H or $40;
+  A[1,73]:=NB_I or $40;
+  A[1,74]:=NB_J or $40;
+  A[1,75]:=NB_K or $40;
+  A[1,76]:=NB_L or $40;
+  A[1,77]:=NB_M or $40;
+  A[1,78]:=NB_N or $40;
+  A[1,79]:=NB_O or $40;
+  A[1,80]:=NB_P or $40;
+  A[1,81]:=NB_Q or $40;
+  A[1,82]:=NB_R or $40;
+  A[1,83]:=NB_S or $40;
+  A[1,84]:=NB_T or $40;
+  A[1,85]:=NB_U or $40;
+  A[1,86]:=NB_V or $40;
+  A[1,87]:=NB_W or $40;
+  A[1,88]:=NB_X or $40;
+  A[1,89]:=NB_Y or $40;
+  A[1,90]:=NB_Z or $40;
+
+
+
+End;
+
+{
+Procedure CheckKeyBoard;
+var
+  Copst,copctl,copbuff,t,tt:byte;
+  KState:Byte;
+  b:Integer;
+
+
+begin
+ 
+ //start auto typing from text file
+ if fnewbrain.keybFileinp then
+ Begin
+    inc(kcnt);
+    if kcnt=-145 then
+     akey:=36;
+    if kcnt=-121 then
+     akey:=40;
+    if kcnt=-100 then
+     akey:=39;
+
+    if kcnt=-80 then
+     akey:=13;
+
+    if kcnt=-10 then
+    Begin
+      Akey:=36;
+    End;
+    if kcnt=-5 then
+    Begin
+      Akey:=38;
+    End;
+
+    if (kcnt>=4)then
+    Begin
+      kcnt:=2;
+      if doclear then
+      Begin
+       NBScreen.Clearscr;
+       doclear:=false;
+       t22:=1;
+       rm:=NBScreen.videoMem.w;
+       inc(rm,NBScreen.el);
+       exit;
+      End;
+      Akey:=ORd(kbuf[kbufc]);
+      if (akey<>$0d) and (Akey<>$0a) then
+       nbmem.rom[rm]:=byte(Akey);
+      inc(rm);
+      inc(t22);
+      if t22>NBScreen.LL then
+      Begin
+       inc(rm,24);
+       nbmem.rom[rm]:=127;
+       inc(rm);
+       t22:=2;
+      end;
+      if akey=$0d then
+      Begin
+       akey:=0;
+       kcnt:=0;
+      End
+      else
+      if akey=$0a then
+      Begin
+        Akey:=0;
+        kcnt:=-150;
+        doclear:=true;
+      End
+      else akey:=0;
+      inc(kbufc);
+      b:=Length(kbuf);
+      if kbufc>=b then
+        fnewbrain.keybFileinp:=false;
+    End;
+
+  end;
+ //End auto typing from text file
+
+
+
+  if AKey<>0 then
+  Begin
+   NBIO.CopInt:=true;
+   KState:=0;
+   if RShift then
+    kstate:=1;
+   NBKey:=A[KState,AKey];
+
+   if ssShift in AShift then
+    NBKey:=NBKey or $40;
+   if ssAlt in AShift then
+    NBKey:=NBKey or $C0;
+   if ssCtrl in AShift then
+    NBKey:=NBKey or $80;
+  End;
+  if nbkey=0 then nbkey:=$80;
+  if NBKey<>$80 then
+  Begin
+
+    //caps lock
+    tt:= GetKeyState( VK_CAPITAL ) and $1; //1 capson 0 capsoff
+    t:=nbmem.rom[$2b];
+    if t<>tt then
+    Begin //set bit 0 of $2b to tt
+      t:=t and $fe;
+      t:=t OR tt;
+     nbmem.rom[$2b]:=t
+    End;
+
+    copst:=nbmem.Rom[$3c];
+//    CopCtl:=NewBrainGetByte($3b);
+//    CopBuff:=NewBrainGetByte($3d);
+    copst:=copst or 64; //set bit 6
+    copst:=copst or 32; //set bit 5
+    nbmem.ROM[$3c]:=copst;
+    nbmem.ROM[$3d]:=NbKey;
+    nbio.KeyPressed:=NbKey;
+    nbio.kbint:=true;
+  End;
+  AKey:=0;
+  AShift:=[];
+  nbKey:=$80;
+end;
+ }
+
+Procedure CheckKeyBoard;
+var
+  Copst,copctl,copbuff,t,tt:byte;
+  KState:Byte;
+  b:Integer;
+
+
+begin
+  if nbio.KeyPressed<>$80 then
+   exit;
+
+ { if nbkey=0 then
+  Begin
+   nbkey:=$80;
+   Exit;
+  End;}
+  //New routine
+
+  nbKey:=nbKeyboard.NBGetKey;
+  if nbKey<>$80 then
+  Begin
+   NBIO.CopInt:=true;
+
+    //caps lock
+    tt:= GetKeyState( VK_CAPITAL ) and $1; //1 capson 0 capsoff
+    t:=nbmem.rom[$2b];
+    if t<>tt then
+    Begin //set bit 0 of $2b to tt
+      t:=t and $fe;
+      t:=t OR tt;
+     nbmem.rom[$2b]:=t
+    End;
+    if nbkey=252 then //Break Key Pressed
+    Begin
+     nbio.brkpressed:=true;
+     NBKey:=25;//VD
+    End;
+    nbio.KeyPressed:=NbKey;
+    nbio.kbint:=true;
+  End;
+  nbKey:=0;
+  Exit;
+
+
+  //Old routine
+  If AkeyList.count>0 then
+  Begin
+   Akey:=strtoint(akeylist[0]);
+   Akeylist.delete(0);
+  End
+  Else
+   Exit;
+  if AKey<>0 then
+  Begin
+   NBIO.CopInt:=true;
+   KState:=0;
+   if RShift then
+    kstate:=1;
+   NBKey:=A[KState,AKey];
+
+   if ssShift in AShift then
+    NBKey:=NBKey or $40;
+   if ssAlt in AShift then
+    NBKey:=NBKey or $C0;
+   if ssCtrl in AShift then
+    NBKey:=NBKey or $80;
+  End;
+  if nbkey=0 then nbkey:=$80;
+  if NBKey<>$80 then
+  Begin
+
+    //caps lock
+    tt:= GetKeyState( VK_CAPITAL ) and $1; //1 capson 0 capsoff
+    t:=nbmem.rom[$2b];
+    if t<>tt then
+    Begin //set bit 0 of $2b to tt
+      t:=t and $fe;
+      t:=t OR tt;
+     nbmem.rom[$2b]:=t
+    End;
+
+
+////    CopCtl:=NewBrainGetByte($3b);
+////    CopBuff:=NewBrainGetByte($3d);
+
+{    copst:=nbmem.Rom[$3c];
+    copst:=copst or 64; //set bit 6
+    copst:=copst or 32; //set bit 5
+    nbmem.ROM[$3c]:=copst;
+    nbmem.ROM[$3d]:=NbKey;}
+
+    nbio.KeyPressed:=NbKey;
+    nbio.kbint:=true;
+  End;
+  AKey:=0;
+  AShift:=[];
+  nbKey:=$80;
+end;
+
+function TNbKeyBoard.TranslateChar(c:Char): Boolean;
+Var w:Word;
+    h,l:Byte;
+begin
+  result:=false;
+  w:=VKKeyScan(c);
+  h:=HiByte(w);
+  l:=LoByte(w);
+  if (h=-1) and (l=-1) then
+  Begin
+   AkeyInt:=0;
+   AShift:=[];
+   Exit;
+  End;
+
+  AkeyInt:=l;
+
+  Ashift:=[];
+  if h and 1=1 then
+   Ashift:=Ashift+[ssShift];
+  if h and 2=2 then
+   Ashift:=Ashift+[ssCTRL];
+  if h and 1=4 then
+   Ashift:=Ashift+[ssAlt];
+
+  result:=true;
+end;
+
+function TNbKeyBoard.GetPCKeyID: string;
+Var SKey:String;
+begin
+
+  SKEY:='';
+  Result := '';
+
+  if ssShift in AShift then
+   Result:=Result+'SHFT_';
+  if ssCtrl in AShift then
+   Result:=Result+'CTRL_';
+  if ssAlt in AShift then
+   Result:=Result+'ALT_';
+
+  Case AkeyInt of
+    13:Skey:='ENTER';
+    27:Skey:='ESC';
+    35:Skey:='END';
+    33:Skey:='PGUP';
+    34:Skey:='PGDN';
+    36:Skey:='HOME';
+    45:Skey:='INS';
+    46:Skey:='DEL';
+    19:Skey:='BREAK';
+  End;
+
+
+
+
+  If skey='' then
+   skey:='K#'+inttostr(AKeyInt);
+
+  If SKey='=' then
+   SKEY:='EQ';
+
+  Result:=Result+sKey;
+end;
+
+procedure TNbKeyBoard.Init;
+Begin
+ keymap[0]:=TStringlist.create;
+ keymap[1]:=TStringlist.create;
+
+ if fileexists('Keymap.txt') then
+  keymap[0].loadfromfile('Keymap.txt');
+ if fileexists('Keymap1.txt') then
+  keymap[1].loadfromfile('Keymap1.txt');
+
+
+ FillNBkeys;
+
+ NBkeyList:=TStringlist.create;
+
+End;
+
+procedure TNbKeyBoard.FillNBkeys;
+Begin
+ { NBNormal0='1234567890()*'
+  +'qwertyuiop=-/ESC/'
+  +'/CTRL/asdfghjkl;+/NL/'
+  +'/SHFT/zxcvbnm,.///SHFT//VID/'
+  +'/GRPH//REPT//HOME//INS//SPC/'+
+     '/CURL//CURU//CURD//CURR//STOP/';}
+
+  //1st ROW
+  NBKeys[0]:=NB_1;
+  NBKeys[1]:=NB_2;
+  NBKeys[2]:=NB_3;
+  NBKeys[3]:=NB_4;
+  NBKeys[4]:=NB_5;
+  NBKeys[5]:=NB_6;
+  NBKeys[6]:=NB_7;
+  NBKeys[7]:=NB_8;
+  NBKeys[8]:=NB_9;
+  NBKeys[9]:=NB_0;
+  NBKeys[10]:=NB_LPR;
+  NBKeys[11]:=NB_RPR;
+  NBKeys[12]:=NB_EQU-3 ; //*;
+
+  //2nd ROW
+  NBKeys[13]:=NB_Q;
+  NBKeys[14]:=NB_W;
+  NBKeys[15]:=NB_E;
+  NBKeys[16]:=NB_R;
+  NBKeys[17]:=NB_T;
+  NBKeys[18]:=NB_Y;
+  NBKeys[19]:=NB_U;
+  NBKeys[20]:=NB_I;
+  NBKeys[21]:=NB_O;
+  NBKeys[22]:=NB_P;
+  NBKeys[23]:=NB_EQU;//=
+  NBKeys[24]:=NB_EQU+1 ;//-
+  NBKeys[25]:=NB_ESC;
+
+  //3rd ROW
+  NBKeys[26]:=NB_CTRL;
+  NBKeys[27]:=NB_A;
+  NBKeys[28]:=NB_S;
+  NBKeys[29]:=NB_D;
+  NBKeys[30]:=NB_F;
+  NBKeys[31]:=NB_G;
+  NBKeys[32]:=NB_H;
+  NBKeys[33]:=NB_J;
+  NBKeys[34]:=NB_K;
+  NBKeys[35]:=NB_L;
+  NBKeys[36]:=NB_COM;//;
+  NBKeys[37]:=NB_EQU+2 ;//+
+  NBKeys[38]:=NB_NLN; //NL
+
+  //4th ROW
+  NBKeys[39]:=NB_SHFT;
+  NBKeys[40]:=NB_Z;
+  NBKeys[41]:=NB_X;
+  NBKeys[42]:=NB_C;
+  NBKeys[43]:=NB_V;
+  NBKeys[44]:=NB_B;
+  NBKeys[45]:=NB_N;
+  NBKeys[46]:=NB_M;
+  NBKeys[47]:=54;// ,
+  NBKeys[48]:=NB_DOT; // .
+  NBKeys[49]:=NB_SLS;// /
+  NBKeys[50]:=NB_SHFT ;// Shift
+  NBKeys[51]:=NB_VID; // Video
+
+  //5th ROW
+  NBKeys[52]:=NB_GRPH;
+  NBKeys[53]:=NB_REPT;
+  NBKeys[54]:=NB_HOM;
+  NBKeys[55]:=NB_INS;
+  NBKeys[56]:=NB_SPC;
+  NBKeys[57]:=NB_SPC;
+  NBKeys[58]:=NB_SPC;
+  NBKeys[59]:=NB_SPC;
+  NBKeys[60]:=2;// <-
+  NBKeys[61]:=50; // ^
+  NBKeys[62]:=34;// kato
+  NBKeys[63]:=18 ;// ->
+  NBKeys[64]:=NB_STOP; // Stop
+
+End;
+
+procedure TNbKeyBoard.PCKeyDown(var Key: Word; Shift: TShiftState);
+Var ScrollOn:Boolean;
+begin
+ AShift:=Shift;
+ AKeyInt:=Key;
+
+ Akey:=GETPCKeyID;
+
+ ScrollOn:=GetKeyState(VK_Scroll) and 1=1;
+
+ If (key in [37,38,39,40]) or ScrollOn then NBAddKey;
+end;
+
+procedure TNbKeyBoard.PCKeyUp(var Key: Word; Shift: TShiftState);
+Var ScrollOn:Boolean;
+begin
+ //  CTRL        Shift       TAB         Alt
+ if (key=17) or (key=16) or (key=9) or (key=18) then exit;
+
+ ScrollOn:=GetKeyState(VK_Scroll) and 1=1;
+
+ If (key in [37,38,39,40]) or scrollOn then exit;
+
+ if Key<>0 then
+  NBAddKey;
+end;
+
+procedure TNbKeyBoard.NBAddKey;
+begin
+ if NBkeyList.count>10 then exit;
+ NBkeyList.Add(AKey);
+ Akey:='';
+ AShift:=[];
+end;
+
+function TNbKeyBoard.NBGetKey: Byte;
+Var
+    Sft:Integer;
+    k,s:String;
+    t:Integer;
+    NBKeyID:Integer;
+    Shifted:String;
+Begin
+ result:=$80;//no Key pressed
+ if NBkeyList.count=0 then exit;
+ k:=NBkeyList[0];
+ NBkeyList.Delete(0);
+
+ If Pos('SHFT',k)>0 then
+  sft:=1
+ Else
+ Begin
+  t:=pos('_K#',k);
+  if t>0 then
+  Begin
+    Shifted:=copy(k,1,t-1);
+    k:=copy(k,t+1,maxint);
+  End
+  Else shifted:='';
+
+  Sft:=0;
+ End;
+
+
+
+ s:=KeyMap[sft].values[k];
+ if s='' then
+ Begin
+  if sft=1 then sft:=0
+    Else sft:=1;
+  s:=KeyMap[sft].values[k];
+ End;
+ nbShifted:= sft=1;
+
+ try
+  if s<>'' then
+   NBKeyid:=strtoint(s)
+  else
+   NBKeyid:=-1;
+ Except
+  NBKeyid:=-1;
+ End;
+
+ If nbkeyid=-1 then exit;
+
+ Result:=NBKEYs[nbkeyid];
+
+ if nbshifted then
+   Result:=Result Or $40;   //Shifted
+
+ //CTRL
+ If Pos('CTRL',Shifted)>0 then
+   Result:=Result Or $80;   //Shifted
+ //Graph
+ If Pos('ALT',Shifted)>0 then
+   Result:=Result Or $C0;   //Shifted
+
+end;
+
+constructor TNbKeyBoard.Create;
+begin
+ Init;
+end;
+
+destructor TNbKeyBoard.Destroy;
+begin
+  inherited;
+end;
+
+procedure TNbKeyBoard.Import(s:String);
+Var i,k:Integer;
+    cnt:Integer;
+begin
+    cnt:=0;
+    For k:=1 to length(s) do
+    Begin
+     If Translatechar(s[k]) then
+     Begin
+      if cnt=0 then delay(300);
+      inc(cnt);
+      Akey:=GETPCKeyID;//Keydown
+      PCKeyUp(AkeyInt,AShift);
+      Delay(100);
+      if s[k]=#13 then
+      Begin
+        delay(500+cnt*25);
+        cnt:=0;
+      End;
+     End;
+    End;
+end;
+
+
+
+
+
+
+Initialization
+  NBKeyBoard:=TNbKeyBoard.create;
+
+end.

@@ -1,0 +1,173 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{7BC8BB45-93F0-4DD2-A21A-3DBCECF7B477}</ProjectGuid>
+			<MainSource>NewBrain.dpr</MainSource>
+			<Config Condition="'$(Config)'==''">Debug</Config>
+			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+			<Cfg_1>true</Cfg_1>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+			<Cfg_2>true</Cfg_2>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_ExeOutput>H:\_Programming\Emulation\Runtime</DCC_ExeOutput>
+			<DCC_Description>NewBrain Emulator Pro</DCC_Description>
+			<DCC_ImageBase>00400000</DCC_ImageBase>
+			<DCC_DependencyCheckOutputName>H:\_Programming\Emulation\Runtime\NewBrain.exe</DCC_DependencyCheckOutputName>
+			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
+			<DCC_Alignment>1</DCC_Alignment>
+			<DCC_Platform>x86</DCC_Platform>
+			<DCC_Optimize>false</DCC_Optimize>
+			<DCC_UsePackage>vcl50</DCC_UsePackage>
+			<DCC_K>false</DCC_K>
+			<DCC_F>false</DCC_F>
+			<DCC_S>false</DCC_S>
+			<DCC_N>true</DCC_N>
+			<DCC_MaxStackSize>8388608</DCC_MaxStackSize>
+			<DCC_WriteableConstants>true</DCC_WriteableConstants>
+			<DCC_E>false</DCC_E>
+			<DCC_StrictVarStrings>false</DCC_StrictVarStrings>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_1)'!=''">
+			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+			<DCC_DebugInformation>false</DCC_DebugInformation>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+		</PropertyGroup>
+		<ItemGroup>
+			<DelphiCompile Include="NewBrain.dpr">
+				<MainSource>MainSource</MainSource>
+			</DelphiCompile>
+			<DCCReference Include="New.pas">
+				<Form>fNewBrain</Form>
+			</DCCReference>
+			<DCCReference Include="raze.pas"/>
+			<DCCReference Include="UDISASM.PAS"/>
+			<DCCReference Include="uprogr.pas">
+				<Form>frmProgress</Form>
+			</DCCReference>
+			<DCCReference Include="ustrings.pas"/>
+			<DCCReference Include="frmNewDebug.pas">
+				<Form>NewDebug</Form>
+			</DCCReference>
+			<DCCReference Include="frmChrDsgn.pas">
+				<Form>fchrdsgn</Form>
+			</DCCReference>
+			<DCCReference Include="frmAbout.pas">
+				<Form>fAbout</Form>
+			</DCCReference>
+			<DCCReference Include="frmTapeMgmt.pas">
+				<Form>fTapeMgmt</Form>
+			</DCCReference>
+			<DCCReference Include="uNBMemory.pas"/>
+			<DCCReference Include="uNBScreen.pas"/>
+			<DCCReference Include="uNBTapes.pas"/>
+			<DCCReference Include="uNBCop.pas"/>
+			<DCCReference Include="uNBTypes.pas"/>
+			<DCCReference Include="uNBKeyboard2.pas"/>
+			<DCCReference Include="uNBStream.pas"/>
+			<DCCReference Include="frmDiskMgmt.pas">
+				<Form>fDiskMgmt</Form>
+			</DCCReference>
+			<DCCReference Include="uPCComms.pas">
+				<Form>dmCommd</Form>
+				<DesignClass>TDataModule</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frmOptions.pas">
+				<Form>foptions</Form>
+			</DCCReference>
+			<DCCReference Include="frmDrvInfo.pas">
+				<Form>fDrvInfo</Form>
+			</DCCReference>
+			<DCCReference Include="frmSplash.pas">
+				<Form>fsplash</Form>
+			</DCCReference>
+			<DCCReference Include="frmDisassembly.pas">
+				<Form>frmdis</Form>
+			</DCCReference>
+			<DCCReference Include="uNBIO.pas"/>
+			<DCCReference Include="uNBCPM.pas"/>
+			<DCCReference Include="frmRomVersion.pas">
+				<Form>fRomVersion</Form>
+			</DCCReference>
+			<DCCReference Include="uAsm.pas"/>
+			<DCCReference Include="uNBParser.pas"/>
+			<DCCReference Include="frmCPUWin.pas">
+				<Form>fCPUWin</Form>
+			</DCCReference>
+			<DCCReference Include="frmOSWin.pas">
+				<Form>fOSWin</Form>
+			</DCCReference>
+			<DCCReference Include="uAsmPrj.pas"/>
+			<DCCReference Include="frmPeriferals.pas">
+				<Form>frmPerif</Form>
+			</DCCReference>
+			<DCCReference Include="frmInstructions.pas">
+				<Form>fInstructions</Form>
+			</DCCReference>
+			<BuildConfiguration Include="Base">
+				<Key>Base</Key>
+			</BuildConfiguration>
+		</ItemGroup>
+		<Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+		<ProjectExtensions>
+			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
+			<Borland.ProjectType>VCLApplication</Borland.ProjectType>
+			<BorlandProject>
+				<Delphi.Personality>
+					<Source>
+						<Source Name="MainSource">NewBrain.dpr</Source>
+					</Source>
+					<Parameters>
+						<Parameters Name="UseLauncher">False</Parameters>
+						<Parameters Name="LoadAllSymbols">True</Parameters>
+						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
+					</Parameters>
+					<Language>
+						<Language Name="RootDir">D:\_Programming\NB Emulator\Emulation\Delphi\</Language>
+					</Language>
+					<VersionInfo>
+						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
+						<VersionInfo Name="AutoIncBuild">True</VersionInfo>
+						<VersionInfo Name="MajorVer">2</VersionInfo>
+						<VersionInfo Name="MinorVer">6</VersionInfo>
+						<VersionInfo Name="Release">0</VersionInfo>
+						<VersionInfo Name="Build">25</VersionInfo>
+						<VersionInfo Name="Debug">False</VersionInfo>
+						<VersionInfo Name="PreRelease">False</VersionInfo>
+						<VersionInfo Name="Special">False</VersionInfo>
+						<VersionInfo Name="Private">False</VersionInfo>
+						<VersionInfo Name="DLL">False</VersionInfo>
+						<VersionInfo Name="Locale">1032</VersionInfo>
+						<VersionInfo Name="CodePage">1253</VersionInfo>
+					</VersionInfo>
+					<VersionInfoKeys>
+						<VersionInfoKeys Name="CompanyName">DespSoft</VersionInfoKeys>
+						<VersionInfoKeys Name="FileDescription">NewBrain Emulator Professional</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">2.6.0.25</VersionInfoKeys>
+						<VersionInfoKeys Name="InternalName">NewBrain</VersionInfoKeys>
+						<VersionInfoKeys Name="LegalCopyright">(c) 2004 DespSoft</VersionInfoKeys>
+						<VersionInfoKeys Name="LegalTrademarks">(c) DespSoft</VersionInfoKeys>
+						<VersionInfoKeys Name="OriginalFilename">NewBrain</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductName">Newbrain Emulator Professional</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductVersion">2.60</VersionInfoKeys>
+						<VersionInfoKeys Name="Comments"/>
+						<VersionInfoKeys Name="LastCompiled">16-08-2008 17:00:00</VersionInfoKeys>
+					</VersionInfoKeys>
+				</Delphi.Personality>
+			</BorlandProject>
+			<ProjectFileVersion>12</ProjectFileVersion>
+		</ProjectExtensions>
+	</Project>

@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{5B0403F3-FDB0-48F1-A93C-FE9B7D0F6496}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="NewBrain.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Z80Package\Z80Emulator.cbproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="NewBrain">
+        <MSBuild Projects="NewBrain.dproj"/>
+    </Target>
+    <Target Name="NewBrain:Clean">
+        <MSBuild Projects="NewBrain.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="NewBrain:Make">
+        <MSBuild Projects="NewBrain.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Z80Emulator">
+        <MSBuild Projects="Z80Package\Z80Emulator.cbproj"/>
+    </Target>
+    <Target Name="Z80Emulator:Clean">
+        <MSBuild Projects="Z80Package\Z80Emulator.cbproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Z80Emulator:Make">
+        <MSBuild Projects="Z80Package\Z80Emulator.cbproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="NewBrain;Z80Emulator"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="NewBrain:Clean;Z80Emulator:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="NewBrain:Make;Z80Emulator:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

@@ -1,0 +1,586 @@
+unit sendkey;    // Sends keys to any window
+
+interface
+
+uses
+  Windows, Messages, dialogs,sysutils{,WindowList},strings;
+
+//This unit requires the WINLDOWLIST unit in order for the FindAWindow
+// function to compile.  That function is NOT necessary to use this unit; if
+// you don't have the WINDOWLIST unit (which is freeware) remove the declaration
+// above, comment out the FindAWindow function, and this unit should compile.
+
+
+const
+    BEGINBRACE = '{';
+    ENDBRACE = '}';
+
+procedure SimulateKeystroke(Key : byte; extra : DWORD);
+procedure SimulateKeyDown(Key : byte);
+procedure SimulateKeyUp(Key : byte);
+procedure SendKeys(s : string; targethwnd : hwnd);
+Procedure SendKeysEx(s : string; targethwnd : hwnd);
+function FindInBraces(s : string; StartAt : integer): string;
+function CountBraceSets(s : string) : integer;
+function GetBraceValue(s : string; setnum : integer) : string;
+function FindNextSetBegin(s : string; StartAt : integer): integer;
+function FindNextSetEnd(s : string; StartAt : integer): integer;
+Function ReplaceSpecialKeys(keystr : string) : string;
+procedure sendinbraces(s : string; targethwnd : hwnd);
+procedure keystroke( key : byte);
+//Function FindaWindow(title : string; partial : boolean; wlist : TWindowList): hwnd;
+
+(*****************************************
+Some Virtual Keys you can use:
+
+VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT, VK_END,
+VK_HOME, VK_PRIOR, VK_NEXT, VK_ESCAPE,
+VK_CONTROL, VK_MENU (ALT)
+
+See end of this file for a more complete list.
+
+
+*****************************************)
+
+
+
+implementation
+uses forms;
+
+
+Procedure Delay(s,ms:Word);
+VAr totdel:Word;
+    Lasttick:Cardinal;
+Begin
+  totdel:=s*1000+ms;
+  lasttick:=Gettickcount;
+  While (Gettickcount-LastTick)<totdel do
+  Begin
+   application.processmessages;
+  End;
+
+
+End;
+
+
+// ***********************************
+//  SimulateKeyStroke
+//
+//  Simulates hitting a key, which is sent to active
+//  window.
+//
+//************************************
+
+procedure SimulateKeystroke(Key : byte; extra : DWORD);
+begin
+  keybd_event(Key,extra,0,0);
+  keybd_event(Key, extra,KEYEVENTF_KEYUP,0);
+end;
+
+// ***********************************
+//  SimulateKeyDown
+//
+//  Simulates holding down a key, such as shift or ALT
+//
+//
+//************************************
+
+procedure SimulateKeyDown(Key : byte);
+  begin
+       keybd_event(Key, 0, 0, 0);
+  end;
+
+// ***********************************
+//  SimulateKeyUp
+//
+//  Simulates releasing a key, such as shift or ALT
+//
+//
+//************************************
+procedure SimulateKeyUp(Key : byte);
+  begin
+       keybd_event(Key, 0, KEYEVENTF_KEYUP, 0);
+  end;
+
+// ***********************************
+//  SendKeys
+//
+//  Sends a string to the window specified
+//  by TargetHWND.  Uses SetForegroundWindow
+//  to make sure keys go to the right place.
+//
+//************************************
+procedure SendKeys(s : string; targethwnd : hwnd);
+var
+   i : integer;
+   flag : bool;
+   w : word;
+   d1,d2 : integer; // for delay loop
+ begin
+    SetForegroundWindow(targetHwnd);  // GET TO THE RIGHT WINDOW
+    {Get the state of the caps lock key}
+     flag := not GetKeyState(VK_CAPITAL) and 1 = 0;
+     {If the caps lock key is on then turn it off}
+     if flag then
+        SimulateKeystroke(VK_CAPITAL, 0);
+     for i := 1 to Length(s) do
+      begin
+        {for d1 := 1 to 1000 do // Delay a tiny bit to allow keys to be accepted.
+          for d2 := 1 to 250 do // THis needs tested on a SLOW PC!
+            begin
+            end;}
+        Delay(0,15);
+        SetForegroundWindow(targetHwnd); // REQUIRED! Verify target window
+        w := VkKeyScan(s[i]);
+        {If there is not an error in the key translation}
+        if ((HiByte(w) <> $FF) and (LoByte(w) <> $FF)) then
+            begin
+              {If the key requires the shift key down - hold it down}
+               if HiByte(w) and 1 = 1 then
+                 SimulateKeyDown(VK_SHIFT);
+              {Send the VK_KEY}
+               SimulateKeystroke(LoByte(w), 0);
+               Delay(0,1);
+              {If the key required the shift key down - release it}
+               if HiByte(w) and 1 = 1 then
+               Begin
+                 SimulateKeyUp(VK_SHIFT);
+                 Delay(0,5);
+               End;
+             end;
+      end;
+      {if the caps lock key was on at start, turn it back on}
+      if flag then
+          SimulateKeystroke(VK_CAPITAL, 0);
+ end;
+
+
+function FindInBraces(s : string; StartAt : integer): string;
+// Given a string and a starting point, finds the next set of
+// braces and returns the characters inside
+var Beginpos, Endpos : integer;
+    bbrace, ebrace : string;
+begin
+   bbrace := BEGINBRACE;
+   ebrace := ENDBRACE;
+   Beginpos := forwardpos(bbrace,s,StartAt);
+   Endpos := forwardpos(ebrace,s,beginpos+1);
+   Result := copy(s,beginpos+1,endpos-beginpos-1);
+end;
+
+
+
+// Returns the location of the next BEGINBRACE character which denotes
+// the beginning of a complete set.  In order to be counted, the set must
+// be terminated with an ENDBRACE character.  If no BEGINBRACE character is
+// found to denote the beginning of a set after the specified location,
+// function returns 0.
+function FindNextSetBegin(s : string; StartAt : integer): integer;
+var x,bbrace,setcount : integer;
+    InSet,done : boolean;
+begin
+   setcount := 0;
+   bbrace := 0;
+   InSet := false;
+   done := false;
+   x := 1;
+   while (x <= length(s))and (not done) do
+     begin
+       if (s[x] = BEGINBRACE) and (not Inset) then
+        begin
+          InSet := true;
+          bbrace := x; // we're PROBABLY beginning a set
+        end;
+       if (s[x] = ENDBRACE) and (InSet) then
+        begin
+          Inset := false;
+          inc(setCount); // we just finished a set so count it.
+          if bbrace >= StartAt then Done := true;
+        end;
+        inc(x);
+     end;
+   if (done) and (setcount > 0) then
+     Result := bbrace
+   else
+     Result := 0;
+end;
+
+
+// Returns the next END BRACE location equal to or after the
+// specified position in the string.  Since Brace sets are counted
+// from the VERY BEGINNING of the string, this MAY NOT return the
+// next occurence of the end brace character.
+// Example: FindNextSetEnd('1}3}5{}',1) would return 7, because the
+// set beginning is at position 6.  Returns 0 if no Set End Brace is
+// found after the given location.
+function FindNextSetEnd(s : string; StartAt : integer): integer;
+var x,bbrace,ebrace,setcount : integer;
+    InSet,done : boolean;
+begin
+   setcount := 0;
+   bbrace := 0;
+   ebrace := 0;
+   InSet := false;
+   done := false;
+   x := 1;
+   while (x <= length(s))and (not done) do
+     begin
+       if (s[x] = BEGINBRACE) and (not Inset) then
+        begin
+          InSet := true;
+          bbrace := x; // we're PROBABLY beginning a set
+        end;
+       if (s[x] = ENDBRACE) and (InSet) then
+        begin
+          Inset := false;
+          ebrace := x;
+          inc(setCount); // we just finished a set so count it.
+          if bbrace >= StartAt then Done := true;
+        end;
+        inc(x);
+     end;
+   if (done) and (setcount > 0) then
+     Result := ebrace
+   else
+     Result := 0;
+end;
+
+// Returns the number of full sets of braces in a given string
+// Note - doesn't count braces that aren't making up a set.
+// So {{{} counts as one, and {{}} counts as one. {}{} would be 2.
+// No "set inside a set" functionality is taken into account.
+function CountBraceSets(s : string): integer;
+var x,setcount : integer;
+    InSet : boolean;
+begin
+   setcount := 0;
+   InSet := false;
+   x := 1;
+   while (x <= length(s)) do
+     begin
+       if (s[x] = BEGINBRACE) and (not Inset) then
+        begin
+          InSet := true; // we're PROBABLY beginning a set
+        end;
+       if (s[x] = ENDBRACE) and (InSet) then
+        begin
+          Inset := false;
+          inc(setCount); // we just finished a set so count it.
+        end;
+        inc(x);
+     end;
+     Result := setcount;
+end;
+
+
+function GetBraceValue(s : string; SetNum : integer) : string;
+// Returns the text in between a set of braces.  SetNum denotes the
+// set to return.
+var count,sloc : integer;
+begin
+    if (setnum <= countbracesets(s)) and (setnum > 0) then
+    begin
+     count := 1;
+     sloc := FindNextSetBegin(s,1);
+     while count <= (setnum-1) do
+       begin
+         sloc := FindNextSetBegin(s,sloc);
+         inc(count);
+         sloc := FindNextSetEnd(s,sloc);
+       end;
+       result := findinbraces(s,sloc);
+    end
+    else
+      result := '';
+end;
+
+// For special codes which can be translated directly into one character
+// bytes, we use this function to cconvert them  (ie {ENTER}=chr(13) etc)
+// This gets them out of the way before more involved code-handling
+// routines attempt to sort out the remaining brace codes.  This function
+// should not need to be used by any user function; it's a helper function
+// for other functions in this unit.
+Function ReplaceSpecialKeys(keystr : string) : string;
+// Replaces certain brace characters with their ascii equivalents
+var Flags: TReplaceFlags;
+begin
+  Flags := [rfReplaceAll,rfIgnoreCase];
+  keystr := StringReplace(keystr, '{ENTER}', chr(13), Flags);
+  keystr := StringReplace(keystr, '{TAB}', chr(9), Flags);
+  keystr := StringReplace(keystr, '{ESC}', chr(27), Flags);
+  keystr := StringReplace(keystr, '{ESCAPE}', chr(27), Flags);
+  result := keystr;
+end;
+
+//*****************************************************************
+// SendKeysEx - An Extended Sendkeys function which converts special
+// text combinations into keystrokes.  Example:  {ENTER} is turned into
+// chr(13), {TAB} = chr(9), etc.  Also, {ALT-F} sends ALT and F, and
+// ALTDOWN holds down the ALT key, ALTUP lets it up, etc.  See the code
+// for all the special codes.  This requires the SendKey function, but
+// can be used in place of the SendKeys function.  The Sendkeys function
+// doesn't handle special codes like SendKeysEx does.
+//*********************************************************************
+Procedure SendKeysEx( s : string; targethwnd : hwnd);
+// Replaces special keys, and handles ALT and CTRL keys
+var bb,eb : integer;
+    tempstr,braceval,workstr : string;
+begin
+  SetForegroundWindow(targetHwnd); // Make sure the correct window recieves focus
+  workstr := ReplaceSpecialKeys(s); // Turn {ENTER}, {TAB}, etc into chars first
+  if CountBraceSets(workstr) > 0 then // we have braces
+    begin
+      bb := FindNextSetBegin(workstr,1); // get the location of first brace set
+      repeat
+        //bb := FindNextSetBegin(workstr,currentpos); // get the location of first brace set
+         eb := FindNextSetEnd(workstr,bb); // set the brace end too
+         if bb > 1 then //send keys before current set of braces
+          begin
+            tempstr := copy(workstr,1,bb-1); // copy data
+            sendkeys(tempstr,targethwnd); // send it
+            delete(workstr,1,bb-1); // wipe out everything we just sent
+            // reset bb and eb since we changed string size
+            bb := FindNextSetBegin(workstr,1);
+            //eb := FindNextSetEnd(workstr,bb);
+            //currentpos := bb; // brace end now becomes beginning of string
+          end
+         else
+          begin
+            braceval := getbracevalue(workstr,1); // return what's in set of braces
+            SendInBraces(braceval,targethwnd); // handle it
+            delete(workstr,1,eb); // wipe brace set from workstring
+            bb := FindNextSetBegin(workstr,1); // get the location of next brace set
+          end;
+         //showmessage(inttostr(bb));
+      until bb = 0; // no more braces
+      if length(workstr) <> 0 then // more keys to send after last brace set, so send 'em
+         sendkeys(workstr,targethwnd);
+    end
+  else
+    begin // no braces, just send the string!
+      sendkeys(workstr, targethwnd);
+    end;
+end;
+
+/// Simulates a keystroke by pressing then releasing virtual key
+procedure keystroke( key : byte);
+begin
+  simulatekeydown(key);
+  simulatekeyup(key);
+end;
+
+// Procedure used by SendKeysEx.  Should not need to be called by any user
+// function.
+procedure sendinbraces(s : string; targethwnd : hwnd);
+var dashpos : integer;
+    predash,postdash : string;
+begin
+  s := trim(s);
+  dashpos := pos('-',s);
+  if dashpos > 0 then
+    begin
+         predash := uppercase(copy(s,1,dashpos-1));
+         postdash := copy(s,dashpos+1,length(s));
+         if predash = 'ALT' then
+            begin
+              SetForegroundWindow(targetHwnd);
+              simulatekeydown(vk_Menu);
+              sendkeys(postdash,targethwnd);
+              simulatekeyup(vk_Menu);
+            end;
+         if predash = 'CTRL' then
+            begin
+              SetForegroundWindow(targetHwnd);
+              simulatekeydown(vk_Control);
+              sendkeys(postdash,targethwnd);
+              simulatekeyup(vk_Control);
+            end;
+         if predash = 'SHIFT' then
+            begin
+              SetForegroundWindow(targetHwnd);
+              simulatekeydown(vk_shift);
+              sendkeys(postdash,targethwnd);
+              simulatekeyup(vk_shift);
+            end;
+    end
+  else
+    begin // simulate single keypresses
+       s:= uppercase(s);
+       SetForegroundWindow(targetHwnd);
+       if s = 'ALTDOWN' then simulatekeydown(vk_Menu);
+       if s = 'ALTUP' then simulatekeyup(vk_menu);
+       if s = 'CTRLDOWN' then simulatekeydown(vk_control);
+       if s = 'CTRLUP' then simulatekeyup(vk_control);
+       if s = 'SHIFTDOWN' then simulatekeydown(vk_shift);
+       if s = 'SHIFTUP' then simulatekeyup(vk_shift);
+       if s = 'NUM0' then keystroke(vk_NumPad0);
+       if s = 'NUM1' then keystroke(vk_NumPad1);
+       if s = 'NUM2' then keystroke(vk_NumPad2);
+       if s = 'NUM3' then keystroke(vk_NumPad3);
+       if s = 'NUM4' then keystroke(vk_NumPad4);
+       if s = 'NUM5' then keystroke(vk_NumPad5);
+       if s = 'NUM6' then keystroke(vk_NumPad6);
+       if s = 'NUM7' then keystroke(vk_NumPad7);
+       if s = 'NUM8' then keystroke(vk_NumPad8);
+       if s = 'NUM9' then keystroke(vk_NumPad9);
+       if s = 'NUM+' then keystroke(vk_Add);
+       if s = 'NUM/' then keystroke(vk_Divide);
+       if s = 'NUM-' then keystroke(vk_Subtract);
+       if s = 'NUM*' then keystroke(vk_Multiply);
+       if s = 'NUM.' then keystroke(vk_Decimal);
+       if s = 'F1' then keystroke(vk_F1);
+       if s = 'F2' then keystroke(vk_F2);
+       if s = 'F3' then keystroke(vk_F3);
+       if s = 'F4' then keystroke(vk_F4);
+       if s = 'F5' then keystroke(vk_F5);
+       if s = 'F6' then keystroke(vk_F6);
+       if s = 'F7' then keystroke(vk_F7);
+       if s = 'F8' then keystroke(vk_F8);
+       if s = 'F9' then keystroke(vk_F9);
+       if s = 'F10' then keystroke(vk_F10);
+       if s = 'F11' then keystroke(vk_F11);
+       if s = 'F12' then keystroke(vk_F12);
+       if s = 'LEFT' then keystroke(vk_left);
+       if s = 'RIGHT' then keystroke(vk_right);
+       if s = 'UP' then keystroke(vk_up);
+       if s = 'DOWN' then keystroke(vk_down);
+       if s = 'HOME' then keystroke(vk_home);
+       if s = 'END' then keystroke(vk_end);
+       if s = 'NUMLOCK' then keystroke(vk_NumLock);
+       if s = 'DELETE' then keystroke(vk_Delete);
+       if s = 'DEL' then keystroke(vk_Delete);
+       if s = 'INS' then keystroke(vk_Insert);
+       if s = 'INSERT' then keystroke(vk_Insert);
+    end;
+end;
+
+//*******************************************************************
+//  FINDAWINDOW - Searches a Windows List in order to locate a window
+//  with the specified title.  If Partial is true, match doesn't need to
+// be the exact title.  If partial is false, the given title must match
+// the window title exactly.  The WList parameter is the Window list declared
+// in the calling form.  This procedure requires the WINDOWLIST unit.
+//********************************************************************
+{
+Function FindaWindow(title : string; partial : boolean; wlist : TWindowList): hwnd;
+var winnum : integer;
+    foundit : boolean;
+begin
+  wlist.refresh;  // refresh the windows list
+  winnum := 0;      // initialize counter
+  foundit := false;
+  if not partial then
+   begin
+    repeat
+     if uppercase(wlist.windows[winnum].wincaption) = uppercase(title) then
+       begin
+         foundit := true;
+         //result := wlist.windows[winnum].winhandle;
+       end
+     else
+       begin
+         inc(winnum)
+       end;
+    until foundit or (winnum = (wlist.count-1));
+   end
+  else  // partial title search
+   begin
+    repeat
+     if isinstring(uppercase(title),uppercase(wlist.windows[winnum].wincaption)) then
+       begin
+         foundit := true;
+       end
+     else
+       begin
+         inc(winnum)
+       end;
+    until foundit or (winnum = (wlist.count-1));
+   end;
+   if not foundit then
+      result := 0   //return 0 if no window matched
+   else
+      result := wlist.windows[winnum].winhandle;
+ end;
+}
+
+end.
+
+
+
+(*
+ vk_LButton   = $01;
+ vk_RButton   = $02;
+ vk_Cancel    = $03;
+  vk_MButton   = $04;   { NOT contiguous with L & RBUTTON }
+  vk_Back      = $08;
+  vk_Tab       = $09;
+  vk_Clear     = $0C;
+  vk_Return    = $0D;
+  vk_Shift     = $10;
+  vk_Control   = $11;
+  vk_Menu      = $12;  { This is the ALT key!!!  }
+  vk_Pause     = $13;
+  vk_Capital   = $14;
+  vk_Escape    = $1B;
+  vk_Space     = $20;
+  vk_Prior     = $21;
+  vk_Next      = $22;
+  vk_End       = $23;
+  vk_Home      = $24;
+  vk_Left      = $25;
+  vk_Up        = $26;
+  vk_Right     = $27;
+  vk_Down      = $28;
+  vk_Select    = $29;
+  vk_Print     = $2A;
+  vk_Execute   = $2B;
+  vk_SnapShot  = $2C;{ vk_Copy      = $2C not used by keyboards }
+  vk_Insert    = $2D;
+  vk_Delete    = $2E;
+  vk_Help      = $2F;
+{ vk_A thru vk_Z are the same as their ASCII equivalents: 'A' thru 'Z' }
+{ vk_0 thru vk_9 are the same as their ASCII equivalents: '0' thru '9' }
+  vk_NumPad0   = $60;
+  vk_NumPad1   = $61;
+  vk_NumPad2   = $62;
+  vk_NumPad3   = $63;
+  vk_NumPad4   = $64;
+  vk_NumPad5   = $65;
+  vk_NumPad6   = $66;
+  vk_NumPad7   = $67;
+  vk_NumPad8   = $68;
+  vk_NumPad9   = $69;
+  vk_Multiply  = $6A;
+  vk_Add       = $6B;
+  vk_Separator = $6C;
+  vk_Subtract  = $6D;
+  vk_Decimal   = $6E;
+  vk_Divide    = $6F;
+  vk_F1        = $70;
+  vk_F2        = $71;
+  vk_F3        = $72;
+  vk_F4        = $73;
+  vk_F5        = $74;
+  vk_F6        = $75;
+  vk_F7        = $76;
+  vk_F8        = $77;
+  vk_F9        = $78;
+  vk_F10       = $79;
+  vk_F11       = $7A;
+  vk_F12       = $7B;
+  vk_F13       = $7C;
+  vk_F14       = $7D;
+  vk_F15       = $7E;
+  vk_F16       = $7F;
+  vk_F17       = $80;
+  vk_F18       = $81;
+  vk_F19       = $82;
+  vk_F20       = $83;
+  vk_F21       = $84;
+  vk_F22       = $85;
+  vk_F23       = $86;
+  vk_F24       = $87;
+  vk_NumLock   = $90;
+  vk_Scroll    = $91;
+
+  *)
