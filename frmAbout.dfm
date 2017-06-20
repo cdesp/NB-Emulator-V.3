@@ -44,8 +44,8 @@ object fAbout: TfAbout
     ParentFont = False
   end
   object Label5: TLabel
-    Left = 52
-    Top = 124
+    Left = 50
+    Top = 114
     Width = 410
     Height = 20
     Caption = 'Testing && Newbrain Knowledge By Despoinidis Nick'
@@ -58,7 +58,7 @@ object fAbout: TfAbout
   end
   object Label2: TLabel
     Left = 76
-    Top = 164
+    Top = 140
     Width = 356
     Height = 48
     Alignment = taCenter
@@ -102,7 +102,7 @@ object fAbout: TfAbout
   end
   object Label7: TLabel
     Left = 64
-    Top = 224
+    Top = 194
     Width = 396
     Height = 32
     Alignment = taCenter
@@ -174,6 +174,24 @@ object fAbout: TfAbout
     Font.Style = [fsUnderline]
     ParentFont = False
     OnClick = Label8Click
+  end
+  object Label12: TLabel
+    Left = 26
+    Top = 240
+    Width = 469
+    Height = 32
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 
+      'Z80 Emulator Engine provided by Lin Ke-Fong (https://github.com/' +
+      'anotherlin/z80emu)'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clOlive
+    Font.Height = -13
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsBold]
+    ParentFont = False
+    WordWrap = True
   end
   object Button1: TButton
     Left = 224

@@ -52,6 +52,7 @@ type
     Label9: TLabel;
     Label10: TLabel;
     Label11: TLabel;
+    Label12: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure Label8Click(Sender: TObject);
   private

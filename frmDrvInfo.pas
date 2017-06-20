@@ -116,7 +116,9 @@ begin
    if speedbutton1.Down then
      nbkeyboard.import('LOAD "'+s+'"'#10#13)
    else
-     nbkeyboard.import('B:LOAD "'+s+'"'#10#13);
+   Begin
+     nbkeyboard.import('LOAD "B:'+s+'"'#10#13);
+   End;
    fnewbrain.SetFocus;
 end;
 

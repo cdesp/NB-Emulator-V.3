@@ -1271,27 +1271,30 @@ emulate_next_instruction:
                                  * 0x6e) is treated like a "IM 0".
 								 */
 
-								if ((opcode & 0x08)) //IM2
-									state->im = Z80_INTERRUPT_MODE_2;
-								else if ((opcode & 0x10))
+								if ((Y(opcode) & 0x03) <= 0x01)
+
+										state->im = Z80_INTERRUPT_MODE_0;
+
+								else if (!(Y(opcode) & 1))
 
 										state->im = Z80_INTERRUPT_MODE_1;
 
 								else
-										state->im = Z80_INTERRUPT_MODE_0;
 
-                                break;
+										state->im = Z80_INTERRUPT_MODE_2;
 
-                        }
+								break;
 
-                        /* 16-bit arithmetic group. */
+						}
 
-                        case ADD_HL_RR: {
+						/* 16-bit arithmetic group. */
 
-                                int     x, y, z, f, c;
+						case ADD_HL_RR: {
 
-                                x = HL_IX_IY;
-                                y = RR(P(opcode));
+								int     x, y, z, f, c;
+
+								x = HL_IX_IY;
+								y = RR(P(opcode));
                                 z = x + y;
 
                                 c = x ^ y ^ z;
