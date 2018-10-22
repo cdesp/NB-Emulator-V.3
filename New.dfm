@@ -4,7 +4,7 @@ object fNewBrain: TfNewBrain
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'NEWBRAIN Pro By Despsoft'
-  ClientHeight = 531
+  ClientHeight = 629
   ClientWidth = 668
   Color = 764381
   Font.Charset = DEFAULT_CHARSET
@@ -175,7 +175,7 @@ object fNewBrain: TfNewBrain
   TextHeight = 13
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 512
+    Top = 610
     Width = 668
     Height = 19
     Panels = <
@@ -198,6 +198,7 @@ object fNewBrain: TfNewBrain
         Width = 50
       end>
     SizeGrip = False
+    ExplicitTop = 492
   end
   object Panel4: TPanel
     Left = 0
@@ -395,10 +396,11 @@ object fNewBrain: TfNewBrain
     Left = 0
     Top = 83
     Width = 668
-    Height = 429
+    Height = 527
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 2
+    ExplicitHeight = 409
     object newscr: TDXDraw
       Left = 14
       Top = 12
@@ -738,7 +740,7 @@ object fNewBrain: TfNewBrain
     Left = 240
     Top = 112
     Bitmap = {
-      494C010107000800AC0020002000FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
+      494C010107000800B00020002000FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000004000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

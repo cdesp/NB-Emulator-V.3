@@ -11,7 +11,7 @@
     <Transaction>2017/06/16 15:51:18.000.955,=G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\frmOptions.pas</Transaction>
     <Transaction>2017/06/16 15:51:34.000.030,=G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\frmRomVersion.pas</Transaction>
     <Transaction>2017/06/16 15:51:41.000.847,=G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\frmTapeMgmt.pas</Transaction>
-    <Transaction>2017/06/16 15:52:06.000.616,=G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\uNBStream.pas</Transaction>
+    <Transaction>2017/06/16 15:52:06.000.589,=G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\uNBScreen.pas</Transaction>
     <Transaction>2017/06/16 15:52:06.000.478,=G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\uNBKeyboard.pas</Transaction>
     <Transaction>2017/06/16 15:52:06.000.536,=G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\uNBMemory.pas</Transaction>
     <Transaction>2017/06/16 15:52:06.000.296,=G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\UDISASM.PAS</Transaction>
@@ -26,7 +26,7 @@
     <Transaction>2017/06/16 15:52:06.000.827,=G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\ustrings.pas</Transaction>
     <Transaction>2017/06/16 15:52:06.000.952,=G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\uUpdate.pas</Transaction>
     <Transaction>2017/06/16 15:52:06.000.334,=G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\uNBCop.pas</Transaction>
-    <Transaction>2017/06/16 15:52:06.000.589,=G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\uNBScreen.pas</Transaction>
+    <Transaction>2017/06/16 15:52:06.000.616,=G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\uNBStream.pas</Transaction>
     <Transaction>2017/06/16 15:52:06.000.774,=G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\uprogr.pas</Transaction>
     <Transaction>2017/06/16 15:52:06.000.802,=G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\Ustopwatch.pas</Transaction>
     <Transaction>2017/06/16 15:52:06.000.645,=G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\uNBTapes.pas</Transaction>

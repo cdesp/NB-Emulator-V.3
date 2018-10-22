@@ -214,6 +214,11 @@ begin
     sl.free;
   End;
  pth:=ExtractFilePath(Application.Exename)+'Discs\';
+ if assigned(NBDiscCtrl) then
+ Begin
+   lb1.ItemIndex:=lb1.Items.IndexOf(NBDiscCtrl.Dir1);
+   lb2.ItemIndex:=lb2.Items.IndexOf(NBDiscCtrl.Dir2);
+ End;
 End;
 
 end.
