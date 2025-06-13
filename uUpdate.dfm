@@ -12,10 +12,9 @@ object frmUpdate: TfrmUpdate
   Font.Style = []
   FormStyle = fsStayOnTop
   GlassFrame.Enabled = True
-  OldCreateOrder = False
   Position = poMainFormCenter
+  OnCreate = FormCreate
   OnShow = FormShow
-  PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
     Left = 80
@@ -49,7 +48,8 @@ object frmUpdate: TfrmUpdate
     TabOrder = 1
   end
   object IdHTTP1: TIdHTTP
-    AllowCookies = True
+    IOHandler = IdSSLIOHandlerSocketOpenSSL1
+    HandleRedirects = True
     ProxyParams.BasicAuthentication = False
     ProxyParams.ProxyPort = 0
     Request.ContentLength = -1
@@ -61,7 +61,8 @@ object frmUpdate: TfrmUpdate
     Request.UserAgent = 'Mozilla/3.0 (compatible; Indy Library)'
     Request.Ranges.Units = 'bytes'
     Request.Ranges = <>
-    HTTPOptions = [hoForceEncodeParams]
+    HTTPOptions = [hoInProcessAuth, hoForceEncodeParams]
+    Compressor = IdCompressorZLib1
     Left = 8
     Top = 8
   end
@@ -71,5 +72,21 @@ object frmUpdate: TfrmUpdate
     OnTimer = Timer1Timer
     Left = 8
     Top = 64
+  end
+  object IdSSLIOHandlerSocketOpenSSL1: TIdSSLIOHandlerSocketOpenSSL
+    MaxLineAction = maException
+    Port = 0
+    DefaultPort = 0
+    SSLOptions.Method = sslvSSLv23
+    SSLOptions.SSLVersions = [sslvSSLv2, sslvSSLv3, sslvTLSv1, sslvTLSv1_1, sslvTLSv1_2]
+    SSLOptions.Mode = sslmBoth
+    SSLOptions.VerifyMode = []
+    SSLOptions.VerifyDepth = 0
+    Left = 152
+    Top = 8
+  end
+  object IdCompressorZLib1: TIdCompressorZLib
+    Left = 304
+    Top = 16
   end
 end

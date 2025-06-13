@@ -36,7 +36,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls, ComCtrls, ExtDlgs, Buttons, Tabs, DockTabSet,
-  OoMisc, AdPort, ADTrmEmu;
+  OoMisc, AdPort, ADTrmEmu, Vcl.Samples.Spin;
 
 Const
   cLnSpace=0;
@@ -169,6 +169,14 @@ type
     Button13: TButton;
     Edit6: TEdit;
     Edit7: TEdit;
+    Panel7: TPanel;
+    PaintBox1: TPaintBox;
+    LabeledEdit1: TLabeledEdit;
+    SpinEdit1: TSpinEdit;
+    SpinEdit2: TSpinEdit;
+    Label13: TLabel;
+    Label14: TLabel;
+    Button14: TButton;
     procedure asmTextKeyPress(Sender: TObject; var Key: Char);
     procedure asmTextMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure BinTextKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -232,6 +240,8 @@ type
     procedure Button11Click(Sender: TObject);
     procedure Button12Click(Sender: TObject);
     procedure Button13Click(Sender: TObject);
+    procedure Button14Click(Sender: TObject);
+    procedure PaintBox1Paint(Sender: TObject);
     procedure SpeedButton10Click(Sender: TObject);
   private
     cx,cy:Integer;
@@ -1532,6 +1542,11 @@ begin
    BUTTON11.Tag:=0;
 end;
 
+procedure Tfrmdis.Button14Click(Sender: TObject);
+begin
+paintbox1.Refresh;
+end;
+
 //Send a Program through RS232 to NBLaptop
 procedure Tfrmdis.Button1Click(Sender: TObject);
 Var HL,BC:Integer;
@@ -1914,6 +1929,48 @@ begin
      6:ActMem:=memErrors;
    end;
    SetSrcCurrentLine;
+end;
+
+procedure Tfrmdis.PaintBox1Paint(Sender: TObject);
+var canv:TCanvas;
+    px,py,psz:integer;
+    x,y,nx,ny:integer;
+    lspc,tspc,bspc:integer;
+    myaddr,newaddr:integer;
+    col,cidx:integer;
+    bt:byte;
+begin
+   lspc:=5;tspc:=5;bspc:=2;
+   psz:=4;
+   paintbox1.Color:=clRed;
+   canv:=paintbox1.Canvas;
+
+   canv.Brush.Color:=clWhite;
+   canv.FillRect(RECT(0,0,paintbox1.Width,paintbox1.Height));
+
+   if not GetValidInteger(LabeledEdit1.text,myaddr) then
+    GetValidInteger(LabeledEdit1.text+'H',myaddr);
+   for y := 0 to SpinEdit2.Value-1 do
+    for x := 0 to SpinEdit1.Value-1 do
+    Begin
+      newaddr:=myaddr+(x div 8)+y*(SpinEdit1.Value div 8);
+      bt:=nbmem.rom[newaddr];
+      cidx:=x mod 8; //0-7
+      col:=trunc(power(2,7-cidx));
+      if bt and col = col  then
+      Begin
+        //canv.Pen.Color:=clBlack;
+        canv.Brush.Color:=clBlack;
+      End
+      else
+      Begin
+       // canv.Pen.Color:=clWhite;
+        canv.Brush.Color:=clwhite;
+      End;
+      nx:=x*(psz+bspc);
+      ny:=y*(psz+bspc);
+      canv.Fillrect(RECT(lspc+nx,tspc+ny,lspc+nx+psz,tspc+ny+psz));
+    End;
 end;
 
 procedure Tfrmdis.pbShowClick(Sender: TObject);

@@ -57,6 +57,7 @@ type
     procedure Label8Click(Sender: TObject);
   private
     { Private declarations }
+
   public
     { Public declarations }
   end;
@@ -71,7 +72,7 @@ uses shellapi,new;
 
 procedure TfAbout.FormCreate(Sender: TObject);
 begin
- Label9.Caption:=fnewbrain.LedDisp.Text;
+ Label9.Caption:= fNewBrain.cVers;
 end;
 
 procedure TfAbout.Label8Click(Sender: TObject);

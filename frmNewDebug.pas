@@ -93,7 +93,7 @@ type
      offs:Integer;
     procedure ShowDisasm;
     procedure PaintListing;
-    procedure CheckBreak(Const pc:Word);
+    function CheckBreak(Const pc:Word):boolean;
   end;
 
 var
@@ -333,19 +333,21 @@ begin
    End;
 end;
 
-procedure TNewDebug.CheckBreak(Const pc:Word);
+function TNewDebug.CheckBreak(Const pc:Word):boolean;
 begin
+ result:=false;
  if fnewbrain.debugging then exit;
  if not visible then exit;
  if bps=nil then exit;
  if bps.Count=0 then exit;
  If (bps.indexof(inttohex(pc,4))>-1) and (not fnewbrain.debugging) then
  Begin
-  z80_stop_emulating;
+   result:=true;
+  //z80_stop_emulating;
   Stopped:=true;
   fnewbrain.debugging:=true;
   ods('BreakPoint Reached at PC :'+inttostr(pc)+' '+inttohex(PC,4));
- End; 
+ End;
 end;
 
 procedure TNewDebug.Edit1KeyUp(Sender: TObject; var Key: Word; Shift:

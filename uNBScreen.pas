@@ -85,6 +85,7 @@ Type
        function GetTV0: Byte;
        function GetSlotn(w: Word): Integer;
        procedure dopaint(Sender: TObject);
+    function getskipframe: integer;
   public
        horzmult:Integer;
        vertmult:Integer;
@@ -619,6 +620,7 @@ Begin
   Result:=pg;
 End;
 
+
 //Paint the graphics screen if there is one
 procedure TNBScreen.paintGraph(ISDev33:Boolean=false);
 Var i,j:Integer;
@@ -921,6 +923,18 @@ Begin
       inc(Offset);
 End;
 
+var skipped,LASTSKIPPED:integer;
+var paintevery:integer=0;
+
+function TNBScreen.getskipframe:integer;
+var t:integer;
+begin
+    t:=lastFPS+SKIPPED-50;
+    paintevery:=max((trunc(fNewbrain.Mhz*50) DIV 50),1);
+
+    result:=paintevery;
+end;
+
 
 //Paint the video screen text
 function TNBScreen.PaintVideo: Boolean;
@@ -929,9 +943,10 @@ var x,y,nender:Integer;
     s:String;
     Visy:Integer;
     FormOffst:Integer;
+    ScaleFactor: Single;
 
 
-    Procedure CheckScreen;
+  {  Procedure CheckScreen;
 
     Begin
      Fnewbrain.ClientWidth:=2*(fnewbrain.newscr.Left-fnewbrain.Panel6.Left)+ HorzMult*LL*8    ;//+ScreenXOffset*2;
@@ -939,6 +954,42 @@ var x,y,nender:Integer;
      EMUScrheight:=520; //should never change cause in 8x8 we show 30 lines not 25
      fnewbrain.clientheight:=2*(fnewbrain.newscr.top)+FormOffst+250*2+8;//+ScreenYOffset*2;//4 bytes around the real screen
     End;
+   }
+
+procedure CheckScreen;
+const
+  DesignDPI = 96; // Your dev system DPI
+var
+
+  EMUScrHeightScaled: Integer;
+  PaddingScaled: Integer;
+begin
+  // Calculate how much to scale dimensions
+  ScaleFactor := Screen.PixelsPerInch / DesignDPI;
+
+  // Scale fixed height
+  EMUScrHeightScaled := Round(520 * ScaleFactor);
+
+  // Scale any padding/margin
+  PaddingScaled := Round(8 * ScaleFactor);
+
+  // Width: scales based on layout and horizontal scaling
+  Fnewbrain.ClientWidth :=
+    2 * (Fnewbrain.newscr.Left - Fnewbrain.Panel6.Left) +
+    Round(HorzMult * LL * 8 * ScaleFactor);
+
+  // Height offset from top panels + status bar, scaled
+  FormOffst :=
+    Round(Fnewbrain.Panel1.Height * ScaleFactor) +
+    Round(Fnewbrain.Panel2.Height * ScaleFactor) +
+    Round(Fnewbrain.StatusBar1.Height * ScaleFactor);
+
+  // Full height with scaled values
+  Fnewbrain.ClientHeight :=
+    2 * Round(Fnewbrain.newscr.Top * ScaleFactor) +
+    FormOffst +
+    Round(250 * 2 * ScaleFactor)+   PaddingScaled;
+end;
 
 
     Function TextVideo:Boolean;
@@ -954,6 +1005,19 @@ var x,y,nender:Integer;
        HasText:=Result;
     End;
 
+    procedure checkFPS;
+    Begin
+      //count frames painted
+     if (GetTickCount-FpsTick>=1000) then
+     Begin
+      Lastfps:=fps-SKIPPED;
+      getskipframe;
+      fps:=0;
+      fpstick:=gettickcount;
+      LASTSKIPPED:=skipped;
+      skipped:=0;
+     End;
+    End;
 
 
 var
@@ -965,6 +1029,7 @@ var
 
     IsDev33:Boolean;
     nStart:Integer;
+    wid: integer;
 begin
    Result:=false;
    Printedlines:=0;
@@ -977,6 +1042,15 @@ begin
     exit;
    End
    else Inc(fps);
+
+
+   if (paintevery>0) and (fps mod paintevery <>0) then
+   BEgin
+    inc(skipped);
+    checkFPS;
+    exit;
+   end;
+
 
   lengx:=8; //8x10 chars
   if el=128 then
@@ -1095,30 +1169,33 @@ begin
     EndOfText:=overrideDev33addr;
 
     paintgraph(IsDev33);
-    //count frames painted
-    if (GetTickCount-FpsTick>=1000) then
-    Begin
-     Lastfps:=fps;
-     fps:=0;
-     fpstick:=gettickcount;
-    End;
 
+
+   checkFPS;
+
+//   wid:=  Round(newscr.width * ScaleFactor);
+   wid:=  newscr.width;
 
    if showfps then
    Begin
-    Newscr.Surface.Canvas.TextOut(newscr.width-100,5 ,'FPS    : '+inttostr(lastfps));
-    Newscr.Surface.Canvas.TextOut(newscr.width-100,25,'MULT.  : '+Floattostr(fnewbrain.Emuls)+'/'+Floattostr(fnewbrain.Mhz));
+    //Newscr.Surface.Canvas.TextOut(0,5 ,'Width    : '+inttostr(newscr.width));
+    //Newscr.Surface.Canvas.TextOut(0,25 ,'dpi    : '+inttostr(Screen.PixelsPerInch));
+
+    Newscr.Surface.Canvas.TextOut(wid-100,5 ,'FPS    : '+inttostr(lastfps));
+    Newscr.Surface.Canvas.TextOut(wid-100,25,'MULT.  : '+Floattostr(fnewbrain.Emuls)+'/'+Floattostr(fnewbrain.Mhz));
     Newscr.Surface.Canvas.TextOut(newscr.width-100,45,'MHz    : '+Floattostr(fnewbrain.Emuls*4));
     Newscr.Surface.Canvas.TextOut(newscr.width-100,65,'Delay  : '+inttostr(nbdel));
 //    Newscr.Surface.Canvas.TextOut(newscr.width-100,85,'Frm Skp: '+inttostr(maxpn));
     Newscr.Surface.Canvas.TextOut(newscr.width-100,85,'COP: '+inttostr(CPTM));
     Newscr.Surface.Canvas.TextOut(newscr.width-100,105,'CLK: '+inttostr(CkTm));
-//    Newscr.Surface.Canvas.TextOut(newscr.width-100,105 ,'FPS    : '+inttostr(fNewBrain.thrEmulate.FrameRate));
+    Newscr.Surface.Canvas.TextOut(newscr.width-100,125 ,'PNTEVERY: '+inttostr(paintevery));
+    Newscr.Surface.Canvas.TextOut(newscr.width-100,145 ,'SKIPPED : '+inttostr(LASTskipped));
     if doHardware in newscr.NowOptions then
      Newscr.Surface.Canvas.TextOut(newscr.width-100,170,'HARDWARE')
     else
      Newscr.Surface.Canvas.TextOut(newscr.width-100,170,'SOFTWARE')
    end;
+
 
    Newscr.Surface.Canvas.Release;
    {Flip the buffer}

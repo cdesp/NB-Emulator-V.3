@@ -157,6 +157,12 @@ void __fastcall TZ80Class::setZ80_GetInterrupt(Z80intf::TGetInterrupt f)
  Z80_GetInterrupt =f;
 }
 
+void __fastcall TZ80Class::setZ80_Step(Z80intf::TStepFunc f)
+{
+  Z80_step = f;
+}
+
+
 extern "C" __declspec(dllexport) TZ80Interface* __stdcall CreateCPPDescClass()
 {
 	MyZ80 = new  TZ80Class();

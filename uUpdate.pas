@@ -36,7 +36,9 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, IdBaseComponent, IdComponent,
-  IdTCPConnection, IdTCPClient, IdHTTP, Vcl.StdCtrls, Vcl.ExtCtrls;
+  IdTCPConnection, IdTCPClient, IdHTTP, Vcl.StdCtrls, Vcl.ExtCtrls, IdIOHandler,
+  IdIOHandlerSocket, IdIOHandlerStack, IdSSL, IdSSLOpenSSL,
+  IdZLibCompressorBase, IdCompressorZLib;
 
 type
   TfrmUpdate = class(TForm)
@@ -45,28 +47,32 @@ type
     Label1: TLabel;
     ListBox1: TListBox;
     Timer1: TTimer;
-
+    IdSSLIOHandlerSocketOpenSSL1: TIdSSLIOHandlerSocketOpenSSL;
+    IdCompressorZLib1: TIdCompressorZLib;
     procedure Button1Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
     newupdate:boolean;
+
     procedure ConnectToSite;
 
     procedure DownloadUpdate(vfn:string);
     { Private declarations }
   public
     { Public declarations }
+    cVers:String;
     function CheckVersion(var vfn:string):boolean;
   end;
 
 var
   frmUpdate: TfrmUpdate;
-Const Mainsite='http://www.newbrainemu.eu/';
+Const Mainsite='https://www.newbrainemu.eu/new/';
 
 implementation
 
-uses shellapi, New;
+uses shellapi, New,IdSSLOpenSSLHeaders;
 
 {$R *.dfm}
 
@@ -129,6 +135,11 @@ Begin
   application.ProcessMessages;
 End;
 
+procedure TfrmUpdate.FormCreate(Sender: TObject);
+begin
+ cVers :=fNewbrain.Leddisp.Text;
+end;
+
 procedure TfrmUpdate.FormShow(Sender: TObject);
 begin
   timer1.enabled:=true;
@@ -167,7 +178,7 @@ Begin
   Newver:=listbox1.Items.Values['latest'];
   splitVersion(Newver,nv,nsv,nb);
   Listbox1.Clear;
-  Curver:=StringReplace(copy(fNewbrain.Leddisp.Text,8,maxint),' ','',[rfReplaceall]);
+  Curver:=StringReplace(copy(cVers,8,maxint),' ','',[rfReplaceall]);
   splitVersion(Curver,cv,csv,cb);
   listbox1.Items.Add('New Version='+Newver);
   listbox1.Items.Add('Cur Version='+Curver);
@@ -200,5 +211,8 @@ begin
     Hide;
   End;
 end;
+
+initialization
+IdOpenSSLSetLibPath(ExtractFilePath(ParamStr(0)));
 
 end.

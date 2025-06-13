@@ -136,7 +136,11 @@ procedure TfDiskMgmt.DOExtract(time:Integer=0);
 Begin
     if vd.Text<>'0' then
     Begin
+     try
       CreateSingleSide(CPMdskimage.FileName,strtoint(vd.Text),strtoint(sd.Text));
+     except
+       exit;
+     end;
     End;
     try
       NBDISCCtrl.DiskExtract(ChangeFileExt(extractfilename(CPMdskimage.FileName),''));

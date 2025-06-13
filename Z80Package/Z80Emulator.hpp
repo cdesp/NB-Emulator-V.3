@@ -29,6 +29,7 @@ class __declspec(delphiclass) TZ80Class : public TZ80Interface
 		virtual void __fastcall setZ80_InB(Z80intf::TInByteFunc f);
 		virtual void __fastcall setZ80_OutB(Z80intf::TOutByteProc f);
 		virtual void __fastcall setZ80_GetInterrupt(Z80intf::TGetInterrupt f);
+		virtual void __fastcall setZ80_Step(Z80intf::TStepFunc f);
 };
 
 TZ80Interface* MyZ80;

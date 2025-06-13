@@ -24,15 +24,15 @@ object frmdis: Tfrmdis
     Top = 0
     Width = 844
     Height = 763
-    ActivePage = TSAsm
+    ActivePage = TSDis
     Align = alClient
     TabOrder = 0
     object TSDis: TTabSheet
       Caption = 'Disassembler'
       object Splitter1: TSplitter
         Left = 533
-        Top = 105
-        Height = 630
+        Top = 137
+        Height = 598
         Align = alRight
         ExplicitLeft = 590
         ExplicitTop = 1
@@ -40,9 +40,9 @@ object frmdis: Tfrmdis
       end
       object Panel2: TPanel
         Left = 0
-        Top = 105
+        Top = 137
         Width = 533
-        Height = 630
+        Height = 598
         Align = alClient
         Color = clWhite
         Font.Charset = DEFAULT_CHARSET
@@ -56,7 +56,7 @@ object frmdis: Tfrmdis
           Left = 1
           Top = 1
           Width = 509
-          Height = 628
+          Height = 596
           Hint = 'Double Click To Enter Comments and labels.'
           Align = alClient
           ParentShowHint = False
@@ -73,7 +73,7 @@ object frmdis: Tfrmdis
           Left = 510
           Top = 1
           Width = 22
-          Height = 628
+          Height = 596
           Align = alRight
           Kind = sbVertical
           PageSize = 0
@@ -83,9 +83,9 @@ object frmdis: Tfrmdis
       end
       object Panel3: TPanel
         Left = 536
-        Top = 105
+        Top = 137
         Width = 300
-        Height = 630
+        Height = 598
         Align = alRight
         Color = clBlack
         Constraints.MaxWidth = 447
@@ -94,7 +94,7 @@ object frmdis: Tfrmdis
           Left = 1
           Top = 1
           Width = 276
-          Height = 628
+          Height = 596
           Align = alClient
           Color = clBlack
           ParentColor = False
@@ -110,7 +110,7 @@ object frmdis: Tfrmdis
           Left = 277
           Top = 1
           Width = 22
-          Height = 628
+          Height = 596
           Align = alRight
           Kind = sbVertical
           PageSize = 0
@@ -122,13 +122,13 @@ object frmdis: Tfrmdis
         Left = 0
         Top = 0
         Width = 836
-        Height = 105
+        Height = 137
         Align = alTop
         FullRepaint = False
         TabOrder = 2
         DesignSize = (
           836
-          105)
+          137)
         object SpeedButton7: TSpeedButton
           Left = 10
           Top = 68
@@ -325,9 +325,9 @@ object frmdis: Tfrmdis
           OnClick = SpeedButton11Click
         end
         object Panel5: TPanel
-          Left = 639
-          Top = 13
-          Width = 193
+          Left = 183
+          Top = 64
+          Width = 178
           Height = 69
           Anchors = [akTop, akRight]
           BorderWidth = 1
@@ -435,6 +435,79 @@ object frmdis: Tfrmdis
             ReadOnly = True
             TabOrder = 3
             Text = '8192'
+          end
+        end
+        object Panel7: TPanel
+          Left = 456
+          Top = -2
+          Width = 377
+          Height = 134
+          TabOrder = 2
+          object PaintBox1: TPaintBox
+            Left = 1
+            Top = 1
+            Width = 160
+            Height = 132
+            Align = alLeft
+            Color = clRed
+            ParentColor = False
+            OnPaint = PaintBox1Paint
+          end
+          object Label13: TLabel
+            Left = 254
+            Top = 40
+            Width = 28
+            Height = 13
+            Caption = 'Width'
+          end
+          object Label14: TLabel
+            Left = 254
+            Top = 69
+            Width = 31
+            Height = 13
+            Caption = 'Height'
+          end
+          object LabeledEdit1: TLabeledEdit
+            Left = 288
+            Top = 11
+            Width = 65
+            Height = 21
+            Alignment = taRightJustify
+            EditLabel.Width = 55
+            EditLabel.Height = 13
+            EditLabel.Caption = 'Graph Addr'
+            LabelPosition = lpLeft
+            TabOrder = 0
+            Text = '0000'
+          end
+          object SpinEdit1: TSpinEdit
+            Left = 288
+            Top = 38
+            Width = 65
+            Height = 22
+            MaxValue = 0
+            MinValue = 0
+            TabOrder = 1
+            Value = 16
+          end
+          object SpinEdit2: TSpinEdit
+            Left = 288
+            Top = 66
+            Width = 65
+            Height = 22
+            MaxValue = 0
+            MinValue = 0
+            TabOrder = 2
+            Value = 16
+          end
+          object Button14: TButton
+            Left = 272
+            Top = 94
+            Width = 75
+            Height = 25
+            Caption = 'Paint'
+            TabOrder = 3
+            OnClick = Button14Click
           end
         end
       end
@@ -1526,13 +1599,13 @@ object frmdis: Tfrmdis
   object OpenTextFileDialog2: TOpenTextFileDialog
     Filter = 'Valid Files|*.bas|*.bas|*.bas|*.*|*.*'
     Title = 'Open Basic File'
-    Left = 704
-    Top = 96
+    Left = 472
+    Top = 24
   end
   object Timer1: TTimer
     Interval = 20
     OnTimer = Timer1Timer
-    Left = 617
-    Top = 97
+    Left = 465
+    Top = 73
   end
 end

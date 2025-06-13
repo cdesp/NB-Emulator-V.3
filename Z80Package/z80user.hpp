@@ -138,6 +138,13 @@ extern "C" {
  (x) = MyZ80->Z_GetInterrupt();          \
 }
 
+#define Z80_STEP(address,x)                                      \
+{                                                                       \
+   (x)= MyZ80->Z_Step(address);                                        \
+}
+
+
+
 #ifdef __cplusplus
 }
 #endif

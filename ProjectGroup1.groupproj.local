@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <BorlandProject>
 	<Transactions>
-    <Transaction>2017/06/17 20:15:15.000.481,G:\_Programming\NB Emulator\Emulation\Z80Package\ProjectGroup1.groupproj=C:\Users\CDesp\Documents\Embarcadero\Studio\Projects\ProjectGroup1.groupproj</Transaction>
-    <Transaction>2017/06/18 21:29:26.000.570,G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\ProjectGroup1.groupproj=G:\_Programming\NB Emulator\Emulation\Z80Package\ProjectGroup1.groupproj</Transaction>
+    <Transaction>2017/06/17 20:15:15.000.481,C:\Users\CDesp\Documents\Embarcadero\Studio\Projects\ProjectGroup1.groupproj=G:\_Programming\NB Emulator\Emulation\Z80Package\ProjectGroup1.groupproj</Transaction>
+    <Transaction>2017/06/18 21:29:26.000.570,G:\_Programming\NB Emulator\Emulation\Z80Package\ProjectGroup1.groupproj=G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\ProjectGroup1.groupproj</Transaction>
   </Transactions>
 	<Default.Personality>
 		<Projects ActiveProject="G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\NewBrain.dproj"/>

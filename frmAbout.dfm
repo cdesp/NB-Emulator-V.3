@@ -12,10 +12,8 @@ object fAbout: TfAbout
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
-  OldCreateOrder = False
   Position = poScreenCenter
   OnCreate = FormCreate
-  PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
     Left = 16
@@ -163,10 +161,10 @@ object fAbout: TfAbout
   object Label11: TLabel
     Left = 101
     Top = 320
-    Width = 153
+    Width = 107
     Height = 16
     Cursor = crHandPoint
-    Caption = 'http://www.newbrain.hcc.nl'
+    Caption = 'https://retro.hcc.nl/'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clNavy
     Font.Height = -13

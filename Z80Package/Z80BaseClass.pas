@@ -37,6 +37,7 @@ Type
        Z80_InB:TInByteFunc;
        Z80_OutB:TOutByteProc;
        Z80_GetInterrupt:TGetInterrupt;
+       Z80_step:TStepFunc;
     Protected
     Public
       //implemented in Delphi
@@ -45,7 +46,7 @@ Type
       Function Z_InB(port: Integer):Integer;
       Procedure Z_OutB(port:Integer;b:Integer);
       Function Z_GetInterrupt:boolean;
-      Procedure Z_StepProc;
+      function Z_Step(Addr:Integer):boolean;
      //implemented in C++
       Function Z_Emulate(cycles: integer): integer;Virtual;Abstract;
       Procedure Z_Reset;Virtual;Abstract;
@@ -57,6 +58,7 @@ Type
       procedure setZ80_InB(f:TInByteFunc); Virtual;Abstract;
       procedure setZ80_OutB(f:TOutByteProc); Virtual;Abstract;
       procedure setZ80_GetInterrupt(f:TGetInterrupt); Virtual;Abstract;
+      procedure setZ80_Step(f:TStepFunc); Virtual;Abstract;
   End;
 
   function CreateCPPDescClass:TZ80Interface; external 'Z80Emulator.bpl';
@@ -92,9 +94,9 @@ begin
   Z80_SetByte(Addr,b);
 end;
 
-procedure TZ80Interface.Z_StepProc;
+function TZ80Interface.Z_Step(Addr:Integer):boolean;
 begin
-
+  result:=  Z80_step(addr);
 end;
 
 end.

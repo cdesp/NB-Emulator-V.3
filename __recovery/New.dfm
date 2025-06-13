@@ -7,7 +7,6 @@ object fNewBrain: TfNewBrain
   ClientHeight = 629
   ClientWidth = 668
   Color = 764381
-  Constraints.MinWidth = 668
   DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -426,7 +425,7 @@ object fNewBrain: TfNewBrain
       Display.Width = 800
       Options = [doFlip, do3D, doDirectX7Mode, doHardware, doSelectDriver]
       SurfaceHeight = 504
-      SurfaceWidth = 641
+      SurfaceWidth = 799
       ParentShowHint = False
       ShowHint = False
       TabOrder = 0

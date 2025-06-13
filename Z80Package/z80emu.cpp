@@ -249,17 +249,20 @@ static int emulate (Z80_STATE * state,
 	int elapsed_cycles, int number_cycles, 
 	void *context)
 {
-        int	pc, r;
+		int	pc, r,retv;
 
-        pc = state->pc;
-        r = state->r & 0x7f;
-        goto start_emulation;
+		pc = state->pc;
+		r = state->r & 0x7f;
+		goto start_emulation;
 
-        for ( ; ; ) {   
+		for ( ; ; ) {
 
-                void    **registers; 
-                int     instruction;
+				void    **registers;
+				int     instruction;
 
+				Z80_STEP(pc,retv);
+				if (retv)
+                  goto stop_emulation;
 				Z80_FETCH_BYTE(pc, opcode);
                 pc++;
 
@@ -2200,7 +2203,7 @@ emulate_next_instruction:
 #elif defined(Z80_CATCH_RETN)
 
                                 state->status = Z80_STATUS_FLAG_RETN;
-                                goto stop_emulation;
+								goto stop_emulation;
 
 #else
 
@@ -2577,7 +2580,7 @@ emulate_next_instruction:
 						case ED_PREFIX: {
 
                                 registers = state->register_table;
-                                Z80_FETCH_BYTE(pc, opcode);
+								Z80_FETCH_BYTE(pc, opcode);
                                 pc++;
                                 instruction = ED_INSTRUCTION_TABLE[opcode];
 

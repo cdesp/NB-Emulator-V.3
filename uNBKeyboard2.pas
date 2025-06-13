@@ -710,7 +710,7 @@ begin
   cnt:=0;
   fNewBrain.thrEmulate.Enabled:=false;
   try
-
+    AShift:=[];
     For k:=1 to length(s) do
     Begin
      If Translatechar(s[k]) then

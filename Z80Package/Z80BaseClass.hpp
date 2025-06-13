@@ -1,16 +1,18 @@
 ﻿// CodeGear C++Builder
-// Copyright (c) 1995, 2016 by Embarcadero Technologies, Inc.
+// Copyright (c) 1995, 2025 by Embarcadero Technologies, Inc.
 // All rights reserved
 
-// (DO NOT EDIT: machine generated header) 'Z80BaseClass.pas' rev: 32.00 (Windows)
+// (DO NOT EDIT: machine generated header) 'Z80BaseClass.pas' rev: 36.00 (Windows)
 
-#ifndef Z80baseclassHPP
-#define Z80baseclassHPP
+#ifndef Z80BaseClassHPP
+#define Z80BaseClassHPP
 
 #pragma delphiheader begin
 #pragma option push
+#if defined(__BORLANDC__) && !defined(__clang__)
 #pragma option -w-      // All warnings off
 #pragma option -Vx      // Zero-length empty class member 
+#endif
 #pragma pack(push,8)
 #include <System.hpp>
 #include <SysInit.hpp>
@@ -38,32 +40,34 @@ public:
 	Z80intf::TInByteFunc Z80_InB;
 	Z80intf::TOutByteProc Z80_OutB;
 	Z80intf::TGetInterrupt Z80_GetInterrupt;
+	Z80intf::TStepFunc Z80_step;
 	int __fastcall Z_GetByte(int Addr);
 	void __fastcall Z_SetByte(int Addr, int b);
 	int __fastcall Z_InB(int port);
 	void __fastcall Z_OutB(int port, int b);
-	bool __fastcall Z_GetInterrupt(void);
-	void __fastcall Z_StepProc(void);
+	bool __fastcall Z_GetInterrupt();
+	bool __fastcall Z_Step(int Addr);
 	virtual int __fastcall Z_Emulate(int cycles) = 0 ;
-	virtual void __fastcall Z_Reset(void) = 0 ;
-	virtual int __fastcall Z_Interrupt(void) = 0 ;
-	virtual int __fastcall Z_Get_Reg(z80_register Reg) = 0 ;
-	virtual void __fastcall Z_Set_Reg(z80_register Reg, int value) = 0 ;
+	virtual void __fastcall Z_Reset() = 0 ;
+	virtual int __fastcall Z_Interrupt() = 0 ;
+	virtual int __fastcall Z_Get_Reg(TRegister Reg) = 0 ;
+	virtual void __fastcall Z_Set_Reg(TRegister Reg, int value) = 0 ;
 	virtual void __fastcall setZ80_getByte(Z80intf::TGetByteFunc f) = 0 ;
 	virtual void __fastcall setZ80_SetByte(Z80intf::TSetByteProc f) = 0 ;
 	virtual void __fastcall setZ80_InB(Z80intf::TInByteFunc f) = 0 ;
 	virtual void __fastcall setZ80_OutB(Z80intf::TOutByteProc f) = 0 ;
 	virtual void __fastcall setZ80_GetInterrupt(Z80intf::TGetInterrupt f) = 0 ;
+	virtual void __fastcall setZ80_Step(Z80intf::TStepFunc f) = 0 ;
 public:
-	/* TObject.Create */ inline __fastcall TZ80Interface(void) : System::TObject() { }
-	/* TObject.Destroy */ inline __fastcall virtual ~TZ80Interface(void) { }
+	/* TObject.Create */ inline __fastcall TZ80Interface() : System::TObject() { }
+	/* TObject.Destroy */ inline __fastcall virtual ~TZ80Interface() { }
 	
 };
 
 #pragma pack(pop)
 
 //-- var, const, procedure ---------------------------------------------------
-extern "C" TZ80Interface* __fastcall CreateCPPDescClass(void);
+extern "C" TZ80Interface* __fastcall CreateCPPDescClass();
 }	/* namespace Z80baseclass */
 #if !defined(DELPHIHEADER_NO_IMPLICIT_NAMESPACE_USE) && !defined(NO_USING_NAMESPACE_Z80BASECLASS)
 using namespace Z80baseclass;
@@ -73,4 +77,4 @@ using namespace Z80baseclass;
 
 #pragma delphiheader end.
 //-- end unit ----------------------------------------------------------------
-#endif	// Z80baseclassHPP
+#endif	// Z80BaseClassHPP

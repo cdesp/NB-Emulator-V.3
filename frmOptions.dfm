@@ -24,7 +24,6 @@ object foptions: Tfoptions
     Height = 388
     Align = alClient
     TabOrder = 0
-    ExplicitHeight = 377
     object ComGroup: TRadioGroup
       Left = 16
       Top = 24
@@ -239,6 +238,7 @@ object foptions: Tfoptions
         Height = 22
         DefaultColorColor = clGreen
         Selected = clGreen
+        Style = [cbStandardColors]
         TabOrder = 0
       end
       object Back: TColorBox
@@ -246,6 +246,7 @@ object foptions: Tfoptions
         Top = 58
         Width = 153
         Height = 22
+        Style = [cbStandardColors]
         TabOrder = 1
       end
     end
@@ -287,7 +288,6 @@ object foptions: Tfoptions
     Height = 41
     Align = alBottom
     TabOrder = 1
-    ExplicitTop = 377
     object Button1: TButton
       Left = 40
       Top = 8
