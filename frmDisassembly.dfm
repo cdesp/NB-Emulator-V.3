@@ -1,36 +1,39 @@
 object frmdis: Tfrmdis
   Left = 221
   Top = 0
-  BorderStyle = bsSizeToolWin
   Caption = 'Newbrain Internal Assembler / Disassembler'
   ClientHeight = 763
-  ClientWidth = 893
+  ClientWidth = 1008
   Color = clBtnFace
+  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
+  KeyPreview = True
   Position = poDesigned
   ScreenSnap = True
+  ShowInTaskBar = True
   OnClose = FormClose
   OnCreate = FormCreate
+  OnKeyDown = FormKeyDown
   OnMouseWheel = FormMouseWheel
-  PixelsPerInch = 96
+  OnShow = FormShow
   TextHeight = 13
   object PageControl1: TPageControl
     Left = 49
     Top = 0
-    Width = 844
+    Width = 959
     Height = 763
     ActivePage = TSDis
     Align = alClient
     TabOrder = 0
+    ExplicitWidth = 844
     object TSDis: TTabSheet
       Caption = 'Disassembler'
       object Splitter1: TSplitter
-        Left = 533
+        Left = 501
         Top = 137
         Height = 598
         Align = alRight
@@ -41,21 +44,25 @@ object frmdis: Tfrmdis
       object Panel2: TPanel
         Left = 0
         Top = 137
-        Width = 533
+        Width = 501
         Height = 598
         Align = alClient
-        Color = clWhite
+        Color = clBackground
+        DoubleBuffered = True
         Font.Charset = DEFAULT_CHARSET
-        Font.Color = clBlack
+        Font.Color = clWhite
         Font.Height = -11
         Font.Name = 'Tahoma'
         Font.Style = []
+        ParentBackground = False
+        ParentDoubleBuffered = False
         ParentFont = False
         TabOrder = 0
+        ExplicitWidth = 533
         object pbShow: TPaintBox
           Left = 1
           Top = 1
-          Width = 509
+          Width = 477
           Height = 596
           Hint = 'Double Click To Enter Comments and labels.'
           Align = alClient
@@ -70,7 +77,7 @@ object frmdis: Tfrmdis
           ExplicitHeight = 630
         end
         object ScrollBar1: TScrollBar
-          Left = 510
+          Left = 478
           Top = 1
           Width = 22
           Height = 596
@@ -79,35 +86,44 @@ object frmdis: Tfrmdis
           PageSize = 0
           TabOrder = 0
           OnChange = ScrollBar1Change
+          ExplicitLeft = 510
         end
       end
       object Panel3: TPanel
-        Left = 536
+        Left = 504
         Top = 137
-        Width = 300
+        Width = 447
         Height = 598
         Align = alRight
         Color = clBlack
         Constraints.MaxWidth = 447
         TabOrder = 1
+        ExplicitLeft = 389
         object PbData: TPaintBox
           Left = 1
           Top = 1
-          Width = 276
+          Width = 423
           Height = 596
           Align = alClient
           Color = clBlack
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Courier New'
+          Font.Style = []
           ParentColor = False
+          ParentFont = False
           ParentShowHint = False
           ShowHint = True
           OnMouseDown = PbDataMouseDown
           OnPaint = PbDataPaint
           ExplicitLeft = 6
           ExplicitTop = -27
+          ExplicitWidth = 276
           ExplicitHeight = 658
         end
         object ScrollBar2: TScrollBar
-          Left = 277
+          Left = 424
           Top = 1
           Width = 22
           Height = 596
@@ -116,19 +132,18 @@ object frmdis: Tfrmdis
           PageSize = 0
           TabOrder = 0
           OnChange = ScrollBar2Change
+          ExplicitLeft = 277
         end
       end
       object Panel1: TPanel
         Left = 0
         Top = 0
-        Width = 836
+        Width = 951
         Height = 137
         Align = alTop
         FullRepaint = False
         TabOrder = 2
-        DesignSize = (
-          836
-          137)
+        ExplicitWidth = 836
         object SpeedButton7: TSpeedButton
           Left = 10
           Top = 68
@@ -329,7 +344,6 @@ object frmdis: Tfrmdis
           Top = 64
           Width = 178
           Height = 69
-          Anchors = [akTop, akRight]
           BorderWidth = 1
           BorderStyle = bsSingle
           FullRepaint = False
@@ -474,7 +488,7 @@ object frmdis: Tfrmdis
             Height = 21
             Alignment = taRightJustify
             EditLabel.Width = 55
-            EditLabel.Height = 13
+            EditLabel.Height = 21
             EditLabel.Caption = 'Graph Addr'
             LabelPosition = lpLeft
             TabOrder = 0
@@ -518,10 +532,11 @@ object frmdis: Tfrmdis
       object Panel4: TPanel
         Left = 0
         Top = 0
-        Width = 836
+        Width = 951
         Height = 41
         Align = alTop
         TabOrder = 0
+        ExplicitWidth = 836
         object SpeedButton1: TSpeedButton
           Left = 9
           Top = 2
@@ -1000,7 +1015,7 @@ object frmdis: Tfrmdis
       object PageControl2: TPageControl
         Left = 0
         Top = 41
-        Width = 836
+        Width = 951
         Height = 675
         ActivePage = TSProj
         Align = alClient
@@ -1014,13 +1029,14 @@ object frmdis: Tfrmdis
         ParentFont = False
         TabOrder = 1
         OnChange = PageControl2Change
+        ExplicitWidth = 836
         object TSProj: TTabSheet
           Caption = 'Project'
           ImageIndex = 6
           object ProjText: TMemo
             Left = 0
             Top = 0
-            Width = 828
+            Width = 943
             Height = 647
             Align = alClient
             Color = clNone
@@ -1036,6 +1052,7 @@ object frmdis: Tfrmdis
             WordWrap = False
             OnKeyPress = asmTextKeyPress
             OnMouseMove = asmTextMouseMove
+            ExplicitWidth = 828
           end
         end
         object TSSource: TTabSheet
@@ -1043,7 +1060,7 @@ object frmdis: Tfrmdis
           object asmText: TMemo
             Left = 0
             Top = 0
-            Width = 828
+            Width = 943
             Height = 647
             Align = alClient
             Color = clNone
@@ -1059,6 +1076,7 @@ object frmdis: Tfrmdis
             WordWrap = False
             OnKeyPress = asmTextKeyPress
             OnMouseMove = asmTextMouseMove
+            ExplicitWidth = 828
           end
         end
         object TSBinary: TTabSheet
@@ -1067,7 +1085,7 @@ object frmdis: Tfrmdis
           object BinText: TMemo
             Left = 0
             Top = 0
-            Width = 828
+            Width = 943
             Height = 647
             Align = alClient
             DoubleBuffered = True
@@ -1087,6 +1105,7 @@ object frmdis: Tfrmdis
             OnKeyDown = BinTextKeyDown
             OnKeyPress = asmTextKeyPress
             OnMouseMove = asmTextMouseMove
+            ExplicitWidth = 828
           end
         end
         object TSSymbols: TTabSheet
@@ -1095,7 +1114,7 @@ object frmdis: Tfrmdis
           object memLabels: TMemo
             Left = 0
             Top = 0
-            Width = 828
+            Width = 943
             Height = 647
             Align = alClient
             Font.Charset = DEFAULT_CHARSET
@@ -1112,6 +1131,7 @@ object frmdis: Tfrmdis
             TabOrder = 0
             OnKeyPress = asmTextKeyPress
             OnMouseMove = asmTextMouseMove
+            ExplicitWidth = 828
           end
         end
         object TSGlob: TTabSheet
@@ -1120,7 +1140,7 @@ object frmdis: Tfrmdis
           object GlobLabels: TMemo
             Left = 0
             Top = 0
-            Width = 828
+            Width = 943
             Height = 647
             Align = alClient
             Font.Charset = DEFAULT_CHARSET
@@ -1137,6 +1157,7 @@ object frmdis: Tfrmdis
             TabOrder = 0
             OnKeyPress = asmTextKeyPress
             OnMouseMove = asmTextMouseMove
+            ExplicitWidth = 828
           end
         end
         object TSMessages: TTabSheet
@@ -1145,7 +1166,7 @@ object frmdis: Tfrmdis
           object memMessages: TMemo
             Left = 0
             Top = 0
-            Width = 828
+            Width = 943
             Height = 647
             Align = alClient
             Font.Charset = DEFAULT_CHARSET
@@ -1159,6 +1180,7 @@ object frmdis: Tfrmdis
             TabOrder = 0
             OnKeyPress = asmTextKeyPress
             OnMouseMove = asmTextMouseMove
+            ExplicitWidth = 828
           end
         end
         object TSErrors: TTabSheet
@@ -1167,7 +1189,7 @@ object frmdis: Tfrmdis
           object memErrors: TMemo
             Left = 0
             Top = 0
-            Width = 828
+            Width = 943
             Height = 647
             Align = alClient
             Font.Charset = DEFAULT_CHARSET
@@ -1181,6 +1203,7 @@ object frmdis: Tfrmdis
             TabOrder = 0
             OnKeyPress = asmTextKeyPress
             OnMouseMove = asmTextMouseMove
+            ExplicitWidth = 828
           end
         end
         object TabSheet1: TTabSheet
@@ -1272,7 +1295,7 @@ object frmdis: Tfrmdis
           object AdTerminal1: TAdTerminal
             Left = 0
             Top = 168
-            Width = 828
+            Width = 943
             Height = 376
             CaptureFile = 'APROTERM.CAP'
             ComPort = ApdComPort1
@@ -1288,6 +1311,7 @@ object frmdis: Tfrmdis
             ParentColor = False
             ParentFont = False
             TabOrder = 0
+            ExplicitWidth = 828
           end
           object Button1: TButton
             Left = 112
@@ -1404,12 +1428,13 @@ object frmdis: Tfrmdis
           object ListBox1: TListBox
             Left = 0
             Top = 544
-            Width = 828
+            Width = 943
             Height = 103
             Align = alBottom
             ItemHeight = 13
             TabOrder = 13
             OnDblClick = ListBox1DblClick
+            ExplicitWidth = 828
           end
           object Button7: TButton
             Left = 255
@@ -1501,7 +1526,7 @@ object frmdis: Tfrmdis
       object StatusBar1: TStatusBar
         Left = 0
         Top = 716
-        Width = 836
+        Width = 951
         Height = 19
         Panels = <
           item
@@ -1520,6 +1545,7 @@ object frmdis: Tfrmdis
             Width = 300
           end>
         OnDblClick = StatusBar1DblClick
+        ExplicitWidth = 836
       end
     end
   end

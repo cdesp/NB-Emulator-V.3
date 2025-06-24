@@ -39,6 +39,17 @@ uses uNBTypes,classes,upccomms;
 
 {$i 'dsp.inc'}
 
+Const
+   CASSCOM=$80;
+   CASSLOD=$8C;
+   PASSCOM=$90;
+   DISPCOM=$A0;
+   TIMCOM =$B0;
+   PDNCOM =$C0;
+   NULLCOM=$D0;
+   RESCOM =$F0;
+
+
 Type
   TNBDevice=(NBUnknown,NBTape1,NBTape2,NBPrn,NBComm);
 
@@ -53,10 +64,13 @@ Type
     function getFileName: String;
     procedure DeleteNoName;
       procedure SetFilename(Value: String);
-    procedure CheckReadEOF;
+    function CheckReadEOF:boolean;
     function FindFileName: string;
-    procedure DoResetTape;
+
   public
+      CassError:boolean;
+      LastCopCommand:Byte;
+      CopBytesToRead: Integer;
       FileIsBinary: Boolean;
       Loading:Boolean;
       Saving:Boolean;
@@ -73,6 +87,8 @@ Type
       comcnt:Integer;
       rom3d:Integer;
       ResetTape:Boolean;
+      procedure DoResetTape;
+      procedure CheckCommand(OldComd, Value: Byte);
       procedure CloseComm;
       procedure OpenComm(ToRead:boolean=false);
       function ReadComm: Byte;
@@ -107,6 +123,7 @@ begin
      else
        NBDiscCtrl:=nil;
      ResetTape:=false;
+
 end;
 
 function TCop420.CheckFileEnd: Boolean;
@@ -129,8 +146,9 @@ Begin
  End;
 End;
 
-procedure TCop420.CheckReadEOF;
+function TCop420.CheckReadEOF:boolean;
 Begin
+ result:=false;
     if size=comcnt then
     Begin
      if size>0 then
@@ -138,6 +156,7 @@ Begin
      comcnt:=0;
      size:=0;
      loading:=false;
+     result:=true;
      if not Tapeinfo.TapeLoaded then
       FileName:='Noname';
     End;
@@ -147,6 +166,7 @@ End;
 procedure TCop420.DoResetTape;
 Begin
   try
+    CassError:=false;
     Device:=NBTape1;
     CloseComm;
     comcnt:=0;
@@ -158,14 +178,86 @@ Begin
     except
 
     end;
-  finally
-    ResetTape:=false;
+  except
+    CassError:=true;
+    commOpened:=false;
   end;
+  ResetTape:=false;
+End;
+
+procedure TCop420.CheckCommand(OldComd:Byte;Value:Byte);
+var i:integer;
+Begin
+
+
+  if (value shr 4 in [$8,$9,$A,$B,$C,$D,$F]) then
+//  if (value in [$80,$90,$A0,$B0,$C0,$D0,$F0]) and (CopState=NewCMD) then
+  Begin
+   LastCopCommand:=Value;
+
+  End;
+
+   //initialize
+  case value of
+   $080:Begin
+        End;
+   $08C:Begin  //Loading    C=4+8 4=play tape 8=? maybe tape 1
+          if not loading then
+          Begin
+             if ResetTape then
+               DoResetTape;
+             Loading:=true;
+             try
+               CassError:=false;
+               Opencomm(true);
+             except
+               CassError:=true;
+             end;
+             Device:=NBTape1;
+            // ODS('----------------START LOADING----------------');
+          End;
+        End;
+   $088:Begin  //Saving
+         if not Saving then
+         begin
+            if ResetTape then
+              DoResetTape;
+            saving:=true;
+            bithasset:=false;
+            rom3d:=-1;
+            Device:=NBTape1;
+            Opencomm;
+            Writecomm(0);
+         end;
+        end;
+    $D0:begin //NULLCOM
+         if loading then //end of block
+         begin
+            // ODS('----------------END OF BLOCK----------------');
+             i:=readcomm;   //read a zero
+          //   ODS('$'+inttohex(prepc)+' COPNBYTE:'+inttostr(i)+' '+inttohex(i,2));
+         end;
+         if saving then
+         begin
+           closecomm;
+           saving:=false;
+         end;
+        end;
+    $A0:Begin //DISPCOP
+         exit;
+        End;
+     else ;
+
+
+
+  end;
+
 End;
 
 function TCop420.CheckReady(addr:Integer): Boolean;
 Var i:Integer;
 begin
+  exit;
   Result := false;
 
   if not Loading and (nbmem.rom[$3b]=$8c)  then
@@ -354,8 +446,8 @@ End;
 
 function TCop420.KBEnabled: Boolean;
 begin
-
-    Result := not loading and not saving;
+    result:=true;
+//    Result := not loading and not saving;
 end;
 
 procedure TCop420.NBRenameFile(Fname:string);

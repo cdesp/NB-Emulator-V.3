@@ -1,4 +1,4 @@
-{
+﻿{
 Grundy NewBrain Emulator Pro Made by Despsoft
 
 Copyright (c) 2004, Despoinidis Chris
@@ -36,7 +36,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls, ComCtrls, ExtDlgs, Buttons, Tabs, DockTabSet,
-  OoMisc, AdPort, ADTrmEmu, Vcl.Samples.Spin;
+  OoMisc, AdPort, ADTrmEmu, Vcl.Samples.Spin, Vcl.Mask;
 
 Const
   cLnSpace=0;
@@ -243,6 +243,8 @@ type
     procedure Button14Click(Sender: TObject);
     procedure PaintBox1Paint(Sender: TObject);
     procedure SpeedButton10Click(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure FormShow(Sender: TObject);
   private
     cx,cy:Integer;
     ActMem:TMemo;
@@ -266,6 +268,7 @@ type
     TotalInstr:Integer;
     SelectedLine:Integer;
     SelPage: Integer;
+    CurPC:Integer;
     procedure DoAftCompile(Sender: TObject; Fname: String);
     procedure DoBefCompile(Sender: TObject; Fname: String);
     procedure CalcDataVals;
@@ -293,7 +296,14 @@ type
     procedure DoDisAsmPrintToFile;
     procedure checkModemStatus;
     function DsrReady: boolean;
+
+
   public
+    procedure SetPC(PC: Integer);
+    procedure AddBreakPoint(Addr: String); overload;
+    procedure AddBreakPoint(Addr: Integer); overload;
+    procedure RemoveBreakPoint(Addr: String); overload;
+    procedure RemoveBreakPoint(Addr: Integer); overload;
     function IsProject: Boolean;
     { Public declarations }
   end;
@@ -303,20 +313,23 @@ type
 Procedure   ShowDisassembler;
 
 var
-  frmdis: Tfrmdis;
+  frmdis: Tfrmdis = nil;
   Instructions:TInstrList;
   BreakPList:TBreakPointList;
 
 implementation
 uses unbMemory,ustrings,uDisAsm,math,Printers,uAsm,uNBTypes, New, frmCPUWin,
-  frmOSWin,uAsmPrj;
+  frmOSWin,uAsmPrj, frmNewDebug;
 
 {$R *.dfm}
 
 Procedure   ShowDisassembler;
 Begin
-  frmdis:= Tfrmdis.create(nil);
-  frmdis.Show;
+  if not assigned(frmdis) then
+  begin
+    frmdis:= Tfrmdis.create(nil);
+    frmdis.Show;
+  end;
 end;
 
 
@@ -708,6 +721,7 @@ begin
   fCPUWin.free;
   fCPUWin:=nil;
   ApdComPort1.Open:=false;
+  frmdis:=nil;
 end;
 
 procedure Tfrmdis.FormCreate(Sender: TObject);
@@ -750,6 +764,13 @@ begin
    end;
 end;
 
+procedure Tfrmdis.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+   if assigned(NewDebug) then
+    NewDebug.FormKeyUp(Sender, key, shift);
+end;
+
 procedure Tfrmdis.FormMouseWheel(Sender: TObject; Shift: TShiftState;
     WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
 Var mp:TPoint;
@@ -778,6 +799,12 @@ begin
  end;
 end;
 
+procedure Tfrmdis.FormShow(Sender: TObject);
+begin
+  SpeedButton7Click(nil);
+  SpeedButton8Click(nil);
+end;
+
 Function Tfrmdis.GetDefaultName:String;
 Begin
    Result:='';
@@ -790,6 +817,13 @@ end;
 procedure Tfrmdis.ListBox1DblClick(Sender: TObject);
 begin
  listbox1.Clear;
+end;
+
+procedure Tfrmdis.SetPC(PC:Integer);
+begin
+  CurPC:=pc;
+  if fnewbrain.Debugging then
+   pbshow.Repaint;
 end;
 
 procedure Tfrmdis.LoadComments(CmnF: TFileName = ''; DestSl: TStringList=Nil);
@@ -829,6 +863,11 @@ Begin
 end;
 
 procedure Tfrmdis.PaintInstructions;
+Const BackColor:TColor=clBlack;
+      FontColor:TColor=clWhite;
+      SelectColor:TColor=clMaroon;
+      CurPCColor:TColor=clGreen;
+      RTNColor:TColor=clAqua;
 Var i,j:Integer;
     s:String;
     th:Integer;
@@ -838,22 +877,23 @@ Var i,j:Integer;
     Canv:TCanvas;
     OldColor:integer;
 
+
     Procedure SetStyle(no:Byte);
     Begin
      pbShow.Canvas.Font.Style := [fsBold];
-     pbShow.Canvas.Font.Color:=clBlue;
+     pbShow.Canvas.Font.Color:=RTNColor;
     End;
 
     Procedure ResetStyle;
     Begin
       with pbShow.Canvas do begin
         Brush.Style := BSSOLID;
-        Brush.Color := CLWHITE;
+        Brush.Color := FontColor;
 
         Font.Name := 'COURIER NEW';
         Font.Style := [];
         Font.Size := 8;
-        Font.Color:= clBlack;
+        Font.Color:= clWhite;
 
         Brush.Style := BSCLEAR;
         Brush.Color := oldcolor;
@@ -868,7 +908,7 @@ Begin
 
 
   header:='BP   ADDR   BYTES        ASCII  LABELS    ASM              COMMENTS                                                  ';
-  OldColor:=clWhite;
+  OldColor:=BackColor;
   ResetStyle;
   Canv:=pbShow.Canvas;
   Canv.FillRect(pbShow.ClientRect);
@@ -888,10 +928,14 @@ Begin
   ResetStyle;
   for i := PS to PS+TLn do
   Begin
+
     if SelectedLine=i then
-      Canv.Brush.Color := CLYellow
+      Canv.Brush.Color := SelectColor
     Else
-      Canv.Brush.Color := CLWHITE;
+     if Instructions[i].Addr=CurPC then
+      Canv.Brush.Color := CurPCColor
+     Else
+      Canv.Brush.Color := BackColor;//CLWHITE;
 
     OldColor:=Canv.Brush.Color;
 
@@ -899,6 +943,15 @@ Begin
 
     y:=PGETYFromLine(i);
     Canv.TextOut(0,Y,st);
+
+    //paint PC
+    if Instructions[i].Addr=CurPC then
+    begin
+      X:=20;
+      canv.Brush.Style := BSSOLID;
+      Canv.TextOut(X,Y,'»');
+      Brush.Style := BSCLEAR;
+    end;
 
     X:=30;
 //    s:=GetCompleteInstruction(i);
@@ -970,7 +1023,8 @@ Var th,tw:Integer;
     Canv:TCanvas;
     i,j:Integer;
     b:Byte;
-    bs,bchrs:String;
+    bs,bchrs:AnsiString;
+    Bytes: TBytes;
     MyAddr:Integer;
     LnVisDat:Integer;
     LnChrSt:Integer;
@@ -978,10 +1032,12 @@ Var th,tw:Integer;
 begin
  if DatPage=-2 then
    Exit;
+   SetLength(Bytes, 0);
  Canv:=pbData.canvas;
  CalcDataVals;
  Canv.Font.Color:=clLime;
  Canv.Brush.Color:=clBlack;
+ canv.font.Pitch:=TFontPitch.fpFixed;
  pbData.Color:=clBlack;
 
 
@@ -1005,7 +1061,7 @@ begin
  Canv.Brush.Color := clWhite;
  for j := 0 to LnVisDat - 1 do
  Begin
-  bs:=inttohex(MyAddr,4)+' ';bchrs:=inttohex(MyAddr,4)+' ';
+  bs:=inttohex(MyAddr,4)+' ';bchrs:=AnsiString(inttohex(MyAddr,4)+' ');
   for i := 0 to DataLineBytes - 1 do
   Begin
      if DatPage=-1 then
@@ -1013,14 +1069,15 @@ begin
      Else
         b:=NBMem.GetDirectMem(DatPage,MyAddr);
      bs:=bs+InttoHex(b,2)+' ';
-     if b>=32 then
-       bchrs:=bchrs+Chr(b)+'  '
+     if (b>=32) and  not ( b in [152,$81,$8c,$88,$8a,$8d,$8e,$8f,$90,$9a,$9c,$9d,$9e,$9f,$d2]) then
+       bchrs:=bchrs+AnsiChar(b)+AnsiChar(32)+AnsiChar(32)
      Else
-       bchrs:=bchrs+Chr(b)+'  ';
+       bchrs:=bchrs+AnsiChar(32)+AnsiChar(32)+AnsiChar(32);
      MyAddr:=MyAddr+1;
      if myaddr>$FFFF then
       Break;
   end; //End i
+
   if J=Selected then
     Canv.Brush.Color:=clRed
   Else
@@ -1028,7 +1085,7 @@ begin
   Canv.Font.Color:=clAqua;
   Canv.TextOut(2,(DataTopMargin+j)*th,bs);
   Canv.Font.Color:=clLime;
-  Canv.TextOut(2,LnChrSt+(DataTopMargin+j)*th,bchrs);
+  Canv.TextOut(2,LnChrSt+(DataTopMargin+j)*th,bchrs);     //
  end;// End j
 end;
 
@@ -1056,14 +1113,23 @@ Begin
  End;
 end;
 
+
 procedure Tfrmdis.AddRemoveBreakPoint(Addr:Integer);
 Var k:Integer;
 Begin
    k:=BreakPList.IndexOf(inttohex(addr,4));
    if k>=0 then //exists so remove it
-     BreakPList.Delete(k)
+   begin
+     BreakPList.Delete(k);
+     if assigned(NewDebug) and NewDebug.Visible then
+       newdebug.RemoveBP(inttohex(addr,4),false); //don't send it back
+   end
    else //doesnot exist so add ed
+   begin
      BreakPList.Add(inttohex(addr,4));
+     if assigned(NewDebug) and NewDebug.Visible then
+       newdebug.AddBP(inttohex(addr,4),false); //don't send it back
+   end;
    pbshow.Repaint;
 end;
 
@@ -1108,9 +1174,11 @@ Var i:Integer;
     PS,PSEnd:integer;
     x,y:integer;
     BPLine:Integer;
-    OldColor:Integer;
+    OldColor,oldback:Integer;
+
 Begin
    OldColor:=pbshow.Canvas.Pen.Color;
+   oldback:=pbshow.Canvas.Brush.Color;
    TLn:=Min(PVisibleLines,TotalInstr-PS);
    PS:=Scrollbar1.Position;
    PSend:=PS+TLn;
@@ -1123,10 +1191,15 @@ Begin
          //CaLc Y Pos
          Y:=PGETYFromLine(BPLine);
          pbshow.Canvas.Pen.Color:=clRed;
+         if ad=Curpc then
+          pbshow.Canvas.Brush.Color:=clRed
+         else
+           pbshow.Canvas.Brush.Color:=oldback;
          pbshow.Canvas.Ellipse(2,y,15,y+13);
       end;
    end;
-   pbshow.Canvas.Pen.Color:=OldColor;  
+   pbshow.Canvas.Pen.Color:=OldColor;
+   pbshow.Canvas.Brush.Color:=oldback;
 end;
 
 procedure Tfrmdis.pbShowPaint(Sender: TObject);
@@ -1981,6 +2054,24 @@ begin
   end;
 end;
 
+
+procedure Tfrmdis.AddBreakPoint(Addr:Integer);
+var i:integer;
+Begin
+
+  BreakPList.Add(inttohex(addr,4));
+  pbshow.Refresh;
+
+End;
+
+procedure Tfrmdis.AddBreakPoint(Addr:String);
+Var v:Integer;
+begin
+  if GetValidInteger('$'+Addr,v) then
+    AddBreakPoint(v);
+End;
+
+
 function Tfrmdis.PGETYFromLine(L: Integer): Integer;
 begin
   Result := LS+(L-Scrollbar1.Position)*(PTextHeight+cLnSpace);
@@ -1994,6 +2085,21 @@ end;
 function Tfrmdis.PVisibleLines: Integer;
 begin    //visible instruction lines
   Result := (pbshow.Height-ls-ls) div (PTextHeight+cLnSpace);
+end;
+
+procedure Tfrmdis.RemoveBreakPoint(Addr: String);
+var v:integer;
+Begin
+  if GetValidInteger('$'+Addr,v) then
+    RemoveBreakPoint(v);
+End;
+
+procedure Tfrmdis.RemoveBreakPoint(Addr: Integer);
+var i:integer;
+begin
+  i:=BreakPList.IndexOf(inttohex(addr,4));
+  if i>=0 then
+    BreakPList.Delete(i);
 end;
 
 procedure Tfrmdis.SetSrcCurrentLine;

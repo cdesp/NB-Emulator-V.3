@@ -140,6 +140,7 @@ type
     newscr: TDXDraw;
     thrEmulate: TDXTimer;
     NBDigitizerv31: TMenuItem;
+    Timer1: TTimer;
     procedure Button1Click(Sender: TObject);
     procedure Start1Click(Sender: TObject);
     procedure FormKeyUp(Sender: TObject; var Key: Word;
@@ -198,6 +199,7 @@ type
     procedure UpdateCheck1Click(Sender: TObject);
     procedure thrEmulateTimer(Sender: TObject; LagCount: Integer);
     procedure NBDigitizerv31Click(Sender: TObject);
+    procedure Timer1Timer(Sender: TObject);
 
 
   private
@@ -254,6 +256,13 @@ type
   end;
 
 
+
+  TEmulationJob = class(TThread)
+  protected
+    procedure Execute; override;
+  end;
+
+
 function GetFiles(Wld:AnsiString;ODirs:Boolean): TStrings;
 
 procedure ODS(s:String);
@@ -268,6 +277,7 @@ procedure ODS(s:String);
 
 var
   fNewBrain: TfNewBrain;
+  EmulationJob:TEmulationJob;
   LASTPC:WORD;  //last pc for debugging
   InterruptServed:Boolean=True;
   NBDel:Integer=30;   //Emulation Delay
@@ -279,6 +289,7 @@ var
   LastOut:Byte;
   LastError:string='';
   AppCaption:String='';
+  Prepc:Word;
 
 implementation
 uses uz80dsm,math, frmNewDebug,jcllogic, frmChrDsgn, frmAbout, frmTapeMgmt,
@@ -405,8 +416,10 @@ Begin
  {$IFNDEF NBDEBUG}
   EXIT;
  {$ENDIF}
-  a:=z80_get_reg(Z80_REG_PC);
-  s:=Timetostr(now)+'PC: '+inttohex(a,4)+','+inttohex(LastPC,4)+' '+s;
+  a:=prepc;
+  if s<>'' then
+    s:=Timetostr(now)+'PC: '+inttohex(a,4)+','+inttohex(LastPC,4)+' '+s
+  else s:=' ';
   OutputDebugString(pchar(s));
 try
  dbgsl.add(s);
@@ -425,13 +438,15 @@ Var a:word;
 Begin
 //  a:=z80_get_reg(Z80_REG_PC);   //not used
   result:=nbmem.ROM[ADDR];
-  if not fnewbrain.bootok then exit;
-
-{  if nbio.kbint and (addr=$3d) then
+exit;   //cdespNEW
+ { if  fnewbrain.bootok then
+  Begin
+ {  if nbio.kbint and (addr=$3d) then
    nbio.kbint:=false;}
-  if Cop420.CheckReady(addr) then
-    result:=nbmem.ROM[ADDR];
-END;
+  {  if Cop420.CheckReady(addr) then
+      result:=nbmem.ROM[ADDR];
+  end;}
+End;
 
 Procedure WRITEBYTE(Addr:Integer;B:Integer);
 Var a:word;
@@ -532,7 +547,7 @@ Var ch:Char;
    Function PortValid:Boolean;
    Begin
       Case Port And $ff of
-       7:result:=false;
+      // 7:result:=false;
        //2,255,9,12,4,6,7:result:=false;
        128:Result:=false;//SCREEN IO
       Else
@@ -569,17 +584,18 @@ Begin
 End;
 }
 Const MAxHist=50;
-Var Prepc:Word;
+Var
     NTI:iNTEGER=0;
 
 function StepProc(addr: integer):boolean;
 var
     sp:word;
     IF1:word;
-    pc:word;
+    pc,af:word;
+    s:String;
 Begin
  pc:=addr;
- fnewbrain.thrEmulate.enabled:=false;
+ //fnewbrain.thrEmulate.enabled:=false;
 {$IFDEF NBDEBUG}
  sp:=  z80_get_reg(Z80_REG_SP);
  if pclist=nil then
@@ -612,14 +628,33 @@ Begin
 {$ENDIF}
   result:=newdebug.checkbreak(pc);
   Prepc:=pc;
-  IF1:=z80_get_reg(Z80_REG_IFF1);
+{
+  af:=  z80_get_reg(Z80_REG_AF);
+  s:=inttohex(af shr 8 ,2);
+ if cop420.Loading then
+ begin
+  if prepc=$e229 then begin ODS('*****COP IS ***** a='+s+' HL='+inttohex(NBmem.GetRom($3b) ,4));ODS('');end;
+  if prepc=$E233 then begin ODS('*****JR C R ***** a='+s);ODS('');end;
+  if prepc=$E298 then begin ODS('*****REGINT ***** a='+s);ODS('');end;
+//  if prepc=$E29B then begin ODS('*****OR (HL)***** a='+s);ODS('');end;
+  if prepc=$E2A7 then begin ODS('*****CP DISP***** a='+s);ODS('');end;
+  if prepc=$E2c4 then begin ODS('*****OUT 18 ***** a='+s);ODS('');end;
+
+  if prepc=$ef23 then begin ODS('*****LSB    ***** a='+s);ODS('');end;
+  if prepc=$ef25 then begin ODS('*****MSB    ***** a='+s);ODS('');end;
+  if prepc=$ef3d then begin ODS('*****TYPE   ***** a='+s);ODS('');end;
+  if prepc=$ef42 then begin ODS('*****LSB CHK***** a='+s);ODS('');end;
+  if prepc=$ef46 then begin ODS('*****MSB CHK***** a='+s);ODS('');end;
+  if prepc=$ef53 then begin ODS('*****CASSON ***** a='+s);ODS('');end;
+ end;}
+ // IF1:=z80_get_reg(Z80_REG_IFF1);
   if fnewbrain.debugging AND NOT STOPPED then
   Begin
    result:=TRUE;
    z80_stop_emulating;
    Stopped:=true;
   End;
- fnewbrain.thrEmulate.enabled:=true;
+// fnewbrain.thrEmulate.enabled:=true;
 End;
 
 
@@ -884,6 +919,7 @@ end;
 procedure TfNewBrain.FormCreate(Sender: TObject);
 begin
 //   thremulate:=nil;
+   EmulationJob:=TEmulationJob.Create(True);
    cVers:= Leddisp.Text;
    timeBeginPeriod(1);
    Savedialog1.initialdir:=root+'Progs\';
@@ -896,6 +932,9 @@ begin
    else
     FillCharArray;
 end;
+
+
+
 
 Var Pretick:Cardinal=0;
     ems:Cardinal=0;
@@ -947,6 +986,13 @@ begin
  end;
 end;
 
+
+procedure TfNewBrain.Timer1Timer(Sender: TObject);
+begin
+  if Debug2.Checked then
+    Nbscreen.paintDebug;
+
+end;
 
 var nextcopclkint:integer=0;
 
@@ -1082,7 +1128,7 @@ Begin
     begin
       tr:=idif*1000/(CPUStates * Mhz);
       if (tr<100) and (tr>0) then
-       sleep(trunc(tr));
+        sleep(trunc(tr));
     end;
 
 
@@ -1246,16 +1292,15 @@ var eer:integer=0;
 procedure TfNewBrain.SuspendEmul;
 begin
  IsSuspended:=true;
- //thrscreen.Enabled:=false;
  thrEmulate.Enabled:=False;
+// EmulationJob.Suspend;
 end;
 
 procedure TfNewBrain.ResumeEmul;
 begin
  IsSuspended:=False;
-// thrscreen.Enabled:=true;
- //IdThreadComponent1.Start;
  thrEmulate.Enabled:=true;
+// EmulationJob.Start;
 end;
 
 procedure TfNewBrain.Suspend1Click(Sender: TObject);
@@ -1341,7 +1386,9 @@ begin
    cop420.filename:=ChangeFileExt(cop420.filename,'');
    delay(1,0);
    kbuf:='LOAD';
-   nbkeyboard.import(kbuf);
+   cop420.DoResetTape;
+
+  // nbkeyboard.import(kbuf);
   End;
 
 end;
@@ -1417,7 +1464,7 @@ begin
   End;
  Except
  End;
- IsSuspended:=true;
+  IsSuspended:=true;
 // sleep(1000); 
  try
   if assigned( dbgsl) then
@@ -1703,7 +1750,13 @@ end;
 procedure TfNewBrain.CaptureRawScreen1Click(Sender: TObject);
 begin
  if assigned(NBScreen) then
+ Begin
   nbscreen.capturetodisk;
+  nbscreen.TakeScreenShot;
+  Application.MessageBox('RAW Screen saved as [ScrRaw.bin]'#10#13+
+                         'Original Screen saved as [NbScreen_Orig.DIB]'#10#13+
+                         'Scaled Screen saved as [NbScreen_Scaled.DIB]','Message');
+ End;
 end;
 
 procedure TfNewBrain.CheckRoms1Click(Sender: TObject);
@@ -2032,9 +2085,21 @@ end;
 
 procedure  TfNewBrain.DoOnidle(sender:TObject;var Done:Boolean);
 Begin
-   StartEmulation;
+//   StartEmulation;
 End;
 
+
+{ TEmulationJob }
+
+procedure TEmulationJob.Execute;
+begin
+  inherited;
+  while not Terminated do
+  begin
+     fnewbrain.StartEmulation;
+     sleep(1);
+  end;
+end;
 
 Initialization
 registerclass(tbutton);

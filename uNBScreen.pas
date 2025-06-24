@@ -32,7 +32,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 unit uNBScreen;
 
 interface
-Uses uNBTypes,DXDraws,uNBStream,graphics,classes;
+Uses uNBTypes,DXDraws,uNBStream,graphics,classes,DIB;
 
 Const ScreenYOffset=2;
       ScreenXOffset=2;
@@ -57,7 +57,10 @@ Type
        EndOfText: Integer;
        HasText: Boolean;
        Printedlines: Integer;
-    function GetNextByte(var p, Offset: Integer): Byte;
+       VirtImgC:TDxdib;
+       VirtImg:TDIB;
+       ScaledImg : TDIB;
+       function GetNextByte(var p, Offset: Integer): Byte;
        function GetDEP: byte;
        function GetEL: byte;
        function GetExcess: Byte;
@@ -85,7 +88,8 @@ Type
        function GetTV0: Byte;
        function GetSlotn(w: Word): Integer;
        procedure dopaint(Sender: TObject);
-    function getskipframe: integer;
+       function getskipframe: integer;
+       procedure SetVirtualImage;
   public
        horzmult:Integer;
        vertmult:Integer;
@@ -120,6 +124,7 @@ Type
        function GetParamed(Offs:word): Byte;
        function ValidGraph: Boolean;
        procedure CaptureToDisk;
+       procedure TakeScreenShot;
        property DEP: byte read GetDEP;
        property EL: byte read GetEL;
        property Excess: Byte read GetExcess;
@@ -181,7 +186,24 @@ begin
   vertmult:=2;
   EMUScrheight:=250; //variable
   EMUScrWidth:=640;
+//  VirtImgC:=TDxdib.create(fNewbrain);
+  VirtImg:=TDIB.Create;
+// Create the scaled destination image (640x500)
+  ScaledImg := TDIB.Create;
+  ScaledImg.Width := 640;
+  ScaledImg.Height := 500;
+  ScaledImg.BitCount := 24;
 end;
+
+Procedure TNBScreen.SetVirtualImage;
+Begin
+  if el=128 then
+    VirtImg.Width:=640
+  else
+    VirtImg.Width:=320;
+  VirtImg.Height:=250;
+  VirtImg.BitCount:=24;
+End;
 
 procedure TNBScreen.ClearScr;
 var i:Integer;
@@ -452,7 +474,7 @@ Begin
 
   if not NewDebug.debugscr.CanDraw then exit;
 
-  NewDebug.debugscr.Surface.Fill(0);
+  NewDebug.debugscr.Surface.Fill(5);
   NewDebug.debugscr.Surface.Lock();
 
   with NewDebug.debugscr.Surface.Canvas do
@@ -621,6 +643,7 @@ Begin
 End;
 
 
+
 //Paint the graphics screen if there is one
 procedure TNBScreen.paintGraph(ISDev33:Boolean=false);
 Var i,j:Integer;
@@ -631,15 +654,15 @@ Var i,j:Integer;
     nocy:integer;
     ch:Byte;
 
-
-
    Procedure DrawPixel(const x1,y1:integer; DoSet:Boolean);
    var clr:TColor;
        nx,ny:Integer;
        i,j:Integer;
    Begin
     if reverse then doset:=not doset;
-    if doset then clr:=WhiteColor else clr:=blackColor;
+    if doset then clr:=WhiteColor else clr:=BlackColor;
+    VirtImg.Pixels[x1,startofgraph+y1]:=clr;
+    exit;
     nx:=ScreenXOffset+x1*horzmult;
     ny:=ScreenYOffset+(startofgraph+y1)*vertmult;
     for i:=0 to horzmult-1 do
@@ -653,6 +676,7 @@ Var i,j:Integer;
      narrow:boolean;
      ident:Integer;
 begin
+
 
   GraphExists:=false;
   If not ValidGraph  then exit;
@@ -854,11 +878,13 @@ Var
        i,j:Integer;
    Begin
     if doset then clr:=WhiteColor else clr:=blackColor;
+    VirtImg.Pixels[x,y]:=clr;
+    exit;
     nx:=ScreenXOffset+x*horzmult;
     ny:=ScreenYOffset+y*vertmult;
     for i:=0 to horzmult-1 do
      for j:=0 to vertmult-1 do
-       newscr.Surface.Pixel[nx+i,(ny+j)]:=clr;
+       newscr.Surface.Pixel[nx+i,ny+j]:=clr;
 //        frame.plot(nx+i,EMUSCRHeight-(ny+j),clr);
    End;
 
@@ -930,8 +956,8 @@ function TNBScreen.getskipframe:integer;
 var t:integer;
 begin
     t:=lastFPS+SKIPPED-50;
-    paintevery:=max((trunc(fNewbrain.Mhz*50) DIV 50),1);
-
+//    paintevery:=max((trunc(fNewbrain.Mhz*50) DIV 50),1);
+    paintevery:= (lastfps div 50)+1;
     result:=paintevery;
 end;
 
@@ -946,50 +972,39 @@ var x,y,nender:Integer;
     ScaleFactor: Single;
 
 
-  {  Procedure CheckScreen;
+  procedure CheckScreen;
+  const
+    DesignDPI = 96; // Your dev system DPI
+  var
+    EMUScrHeightScaled: Integer;
+    PaddingScaled: Integer;
+  begin
+    // Calculate how much to scale dimensions
+    ScaleFactor := Screen.PixelsPerInch / DesignDPI;
 
-    Begin
-     Fnewbrain.ClientWidth:=2*(fnewbrain.newscr.Left-fnewbrain.Panel6.Left)+ HorzMult*LL*8    ;//+ScreenXOffset*2;
-     FormOffst:= fnewbrain.panel1.Height+fnewbrain.panel2.Height+fnewbrain.StatusBar1.Height;  //48;// = led+Statusbar+4 bytes =25+19+4
-     EMUScrheight:=520; //should never change cause in 8x8 we show 30 lines not 25
-     fnewbrain.clientheight:=2*(fnewbrain.newscr.top)+FormOffst+250*2+8;//+ScreenYOffset*2;//4 bytes around the real screen
-    End;
-   }
+    // Scale fixed height
+    EMUScrHeightScaled := Round(520 * ScaleFactor);
 
-procedure CheckScreen;
-const
-  DesignDPI = 96; // Your dev system DPI
-var
+    // Scale any padding/margin
+    PaddingScaled := Round(8 * ScaleFactor);
 
-  EMUScrHeightScaled: Integer;
-  PaddingScaled: Integer;
-begin
-  // Calculate how much to scale dimensions
-  ScaleFactor := Screen.PixelsPerInch / DesignDPI;
+    // Width: scales based on layout and horizontal scaling
+    Fnewbrain.ClientWidth :=
+       2 * (Fnewbrain.newscr.Left - Fnewbrain.Panel6.Left) +
+       Round(HorzMult * LL * 8 * ScaleFactor);
 
-  // Scale fixed height
-  EMUScrHeightScaled := Round(520 * ScaleFactor);
+    // Height offset from top panels + status bar, scaled
+    FormOffst :=
+      Round(Fnewbrain.Panel1.Height * ScaleFactor) +
+      Round(Fnewbrain.Panel2.Height * ScaleFactor) +
+      Round(Fnewbrain.StatusBar1.Height * ScaleFactor);
 
-  // Scale any padding/margin
-  PaddingScaled := Round(8 * ScaleFactor);
-
-  // Width: scales based on layout and horizontal scaling
-  Fnewbrain.ClientWidth :=
-    2 * (Fnewbrain.newscr.Left - Fnewbrain.Panel6.Left) +
-    Round(HorzMult * LL * 8 * ScaleFactor);
-
-  // Height offset from top panels + status bar, scaled
-  FormOffst :=
-    Round(Fnewbrain.Panel1.Height * ScaleFactor) +
-    Round(Fnewbrain.Panel2.Height * ScaleFactor) +
-    Round(Fnewbrain.StatusBar1.Height * ScaleFactor);
-
-  // Full height with scaled values
-  Fnewbrain.ClientHeight :=
-    2 * Round(Fnewbrain.newscr.Top * ScaleFactor) +
-    FormOffst +
-    Round(250 * 2 * ScaleFactor)+   PaddingScaled;
-end;
+    // Full height with scaled values
+    Fnewbrain.ClientHeight :=
+      2 * Round(Fnewbrain.newscr.Top * ScaleFactor) +
+      FormOffst +
+      Round(250 * 2 * ScaleFactor)+   PaddingScaled;
+  end;
 
 
     Function TextVideo:Boolean;
@@ -1011,12 +1026,28 @@ end;
      if (GetTickCount-FpsTick>=1000) then
      Begin
       Lastfps:=fps-SKIPPED;
-      getskipframe;
+//      if fps>50 then
+  //      inc(paintevery);
+      paintevery:= getskipframe;
       fps:=0;
       fpstick:=gettickcount;
       LASTSKIPPED:=skipped;
       skipped:=0;
      End;
+    End;
+
+    procedure DoPaintDX;
+    Begin
+       if not newscr.candraw then exit;
+       newscr.Surface.lock();
+       Newscr.Surface.Canvas.Draw(0, 0, ScaledImg);
+       Newscr.Surface.Canvas.Release;
+      {Flip the buffer}
+       try
+        newscr.surface.unlock;
+        Newscr.Flip;
+       except
+       end;
     End;
 
 
@@ -1030,12 +1061,19 @@ var
     IsDev33:Boolean;
     nStart:Integer;
     wid: integer;
+    Canv:TCanvas;
 begin
    Result:=false;
    Printedlines:=0;
-   if not nbio.tvenabled then exit;
  try
    if not newscr.candraw or (el=0) then exit;
+   if not nbio.tvenabled then
+   begin
+      ScaledImg.Fill(255);
+      DoPaintDX;
+      exit;
+   end;
+
    if (el<20) or (el>128) or (el=frm) then
    Begin
     FPS:=1;
@@ -1077,14 +1115,20 @@ begin
    if (el=128) and not char8 then
      visy:=visy-1; //in 80 columns we have 25 lines not 26 (why?)
    CheckScreen;
-
+   SetVirtualImage; //320 or 640 width
 
    //border color change this to be visible
    if testbit(tvmodereg,0) then
-    newscr.Surface.Fill(WhiteColor)
+   begin
+   // newscr.Surface.Fill(WhiteColor);
+    VirtImg.Fill(WhiteColor);
+   end
    Else
-    newscr.Surface.Fill(blackColor);
-  newscr.Surface.lock();
+   begin
+   // newscr.Surface.Fill(blackColor);
+    VirtImg.Fill(BlackColor);
+   end;
+
   vp:=VideoPage;
   IsDev33:=not TextVideo;
   //Even in Dev 33 it adds a pseudo text screen in front of it
@@ -1174,40 +1218,43 @@ begin
    checkFPS;
 
 //   wid:=  Round(newscr.width * ScaleFactor);
-   wid:=  newscr.width;
+   ScaledImg.Canvas.StretchDraw(Rect(0, 0, 640, 500), VirtImg);
+   wid:=  ScaledImg.width;
+   Canv:=ScaledImg.Canvas;
 
    if showfps then
    Begin
     //Newscr.Surface.Canvas.TextOut(0,5 ,'Width    : '+inttostr(newscr.width));
     //Newscr.Surface.Canvas.TextOut(0,25 ,'dpi    : '+inttostr(Screen.PixelsPerInch));
 
-    Newscr.Surface.Canvas.TextOut(wid-100,5 ,'FPS    : '+inttostr(lastfps));
-    Newscr.Surface.Canvas.TextOut(wid-100,25,'MULT.  : '+Floattostr(fnewbrain.Emuls)+'/'+Floattostr(fnewbrain.Mhz));
-    Newscr.Surface.Canvas.TextOut(newscr.width-100,45,'MHz    : '+Floattostr(fnewbrain.Emuls*4));
-    Newscr.Surface.Canvas.TextOut(newscr.width-100,65,'Delay  : '+inttostr(nbdel));
-//    Newscr.Surface.Canvas.TextOut(newscr.width-100,85,'Frm Skp: '+inttostr(maxpn));
-    Newscr.Surface.Canvas.TextOut(newscr.width-100,85,'COP: '+inttostr(CPTM));
-    Newscr.Surface.Canvas.TextOut(newscr.width-100,105,'CLK: '+inttostr(CkTm));
-    Newscr.Surface.Canvas.TextOut(newscr.width-100,125 ,'PNTEVERY: '+inttostr(paintevery));
-    Newscr.Surface.Canvas.TextOut(newscr.width-100,145 ,'SKIPPED : '+inttostr(LASTskipped));
+    Canv.TextOut(wid-100,5 ,'FPS    : '+inttostr(lastfps));
+    Canv.TextOut(wid-100,25,'MULT.  : '+Floattostr(fnewbrain.Emuls)+'/'+Floattostr(fnewbrain.Mhz));
+    Canv.TextOut(newscr.width-100,45,'MHz    : '+Floattostr(fnewbrain.Emuls*4));
+    Canv.TextOut(newscr.width-100,65,'Delay  : '+inttostr(nbdel));
+//    Canv.TextOut(newscr.width-100,85,'Frm Skp: '+inttostr(maxpn));
+    Canv.TextOut(newscr.width-100,85,'COP: '+inttostr(CPTM));
+    Canv.TextOut(newscr.width-100,105,'CLK: '+inttostr(CkTm));
+    Canv.TextOut(newscr.width-100,125 ,'PNTEVERY: '+inttostr(paintevery));
+    Canv.TextOut(newscr.width-100,145 ,'SKIPPED : '+inttostr(LASTskipped));
     if doHardware in newscr.NowOptions then
-     Newscr.Surface.Canvas.TextOut(newscr.width-100,170,'HARDWARE')
+     Canv.TextOut(newscr.width-100,170,'HARDWARE')
     else
-     Newscr.Surface.Canvas.TextOut(newscr.width-100,170,'SOFTWARE')
+     Canv.TextOut(newscr.width-100,170,'SOFTWARE')
    end;
 
 
-   Newscr.Surface.Canvas.Release;
-   {Flip the buffer}
-   try
-    newscr.surface.unlock;
-    Newscr.Flip;
-   except
-   end; 
+
+   DoPaintDX;
    result:=true;
  Finally
  End;
 end;
+
+procedure TNbScreen.TakeScreenShot;
+Begin
+  VirtImg.SaveToFile(AppPath+'NbScreen_Orig.dib');
+  ScaledImg.SaveToFile(AppPath+'NbScreen_Scaled.dib');
+End;
 
 function TNBScreen.StartGraph: Tpair;  //Not Used
 Var mslt:byte;
@@ -1338,8 +1385,6 @@ Begin
   ft.OnPaint:= dopaint;
 
   ft.show;
-  Application.MessageBox('Screen saved at ScrRaw.bin','Message');
-
 End;
 
 //just paint the screen to show the user what will be saved on disk

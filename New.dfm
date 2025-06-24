@@ -7,7 +7,6 @@ object fNewBrain: TfNewBrain
   ClientHeight = 629
   ClientWidth = 668
   Color = 764381
-  Constraints.MinWidth = 668
   DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -239,7 +238,7 @@ object fNewBrain: TfNewBrain
           Height = 25
           Thick = 2
           Colour = 4259648
-          Text = 'VERSION 3.03'
+          Text = 'VERSION 3.04B1'
           Len = 16
           LedWidth = 20
           BackColor = clBlack
@@ -426,7 +425,7 @@ object fNewBrain: TfNewBrain
       Display.Width = 800
       Options = [doFlip, do3D, doDirectX7Mode, doHardware, doSelectDriver]
       SurfaceHeight = 504
-      SurfaceWidth = 641
+      SurfaceWidth = 799
       ParentShowHint = False
       ShowHint = False
       TabOrder = 0
@@ -589,7 +588,7 @@ object fNewBrain: TfNewBrain
         Caption = '-'
       end
       object CaptureRawScreen1: TMenuItem
-        Caption = 'Capture Raw Screen'
+        Caption = 'Capture Screen'
         OnClick = CaptureRawScreen1Click
       end
       object SaveMemorytoDisk1: TMenuItem
@@ -1823,5 +1822,12 @@ object fNewBrain: TfNewBrain
     OnTimer = thrEmulateTimer
     Left = 168
     Top = 248
+  end
+  object Timer1: TTimer
+    Enabled = False
+    Interval = 10
+    OnTimer = Timer1Timer
+    Left = 224
+    Top = 259
   end
 end

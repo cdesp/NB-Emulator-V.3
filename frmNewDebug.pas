@@ -42,13 +42,11 @@ type
   TNewDebug = class(TForm)
     debugscr: TDXDraw;
     Panel1: TPanel;
-    CheckBox1: TCheckBox;
     Button3: TButton;
     bpnts: TComboBox;
     Button4: TButton;
     Offset: TEdit;
     Button5: TButton;
-    CheckBox2: TCheckBox;
     Streams: TButton;
     Memo1: TMemo;
     Splitter1: TSplitter;
@@ -63,6 +61,8 @@ type
     Edit1: TEdit;
     Edit2: TEdit;
     Edit3: TEdit;
+    Button1: TButton;
+    Button2: TButton;
     procedure Button2Click(Sender: TObject);
     procedure Button5Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -82,15 +82,19 @@ type
     procedure FormShow(Sender: TObject);
     procedure SpeedButton4Click(Sender: TObject);
     procedure SpeedButton5Click(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
   private
     { Private declarations }
     Mstrings:PString16;
        fds:TfrmDisasm;
     CanWeDraw: Boolean;
     bps: TStringlist;
+    procedure ShowMiniDisasm;
   public
     { Public declarations }
      offs:Integer;
+    procedure AddBP(v: String; PassOver: boolean);
+    procedure RemoveBP(v: String; PassOver: boolean);
     procedure ShowDisasm;
     procedure PaintListing;
     function CheckBreak(Const pc:Word):boolean;
@@ -103,16 +107,54 @@ var
 
 implementation
 
-uses unbscreen,unbmemory, New,z80baseclass,ustrings,unbio;
+uses unbscreen,unbmemory, New,z80baseclass,ustrings,unbio, frmDisassembly;
 
 {$R *.DFM}
 
-procedure TNewDebug.Button2Click(Sender: TObject);
+procedure TNewDebug.Button1Click(Sender: TObject);
 begin
+  if bpnts.Items.Count>0 then
+   bpnts.Items.SaveToFile(fnewbrain.Root+'BrkPoints.txt');
+end;
+
+procedure TNewDebug.Button2Click(Sender: TObject);
+
+  procedure loadbps;
+  var i:integer;
+  Begin
+    bpnts.Items.LoadFromFile(fnewbrain.Root+'BrkPoints.txt');
+    if assigned(frmdis) then
+    begin
+       for i := 0 to bps.count-1 do
+        frmdis.RemoveBreakPoint(bps[i]);
+       for i := 0 to bpnts.items.count-1 do
+        frmdis.AddBreakPoint(bpnts.Items[i]);
+    end;
+    bps.assign(bpnts.items);
+  End;
+
+begin
+ if fileexists(fnewbrain.Root+'BrkPoints.txt') then
+ Begin
+  if bpnts.Items.Count>0 then
+  begin
+   if messageDlg('All existing breakpoints will be lost. Continue?',TMsgDlgType.mtConfirmation,mbYesNo,0)=mrYes  then
+   begin
+       loadbps
+   end;
+  end else
+     loadbps;
+
+
+ End;
+end;
+
+procedure TNewDebug.ShowMiniDisasm;
+Begin
    if frmdisasm=nil then
     frmDisasm:= TfrmDisasm.create(nil);
    frmdisasm.show;
-end;
+End;
 
 procedure TNewDebug.Button5Click(Sender: TObject);
 begin
@@ -314,13 +356,34 @@ begin
      SpeedButton1Click(Nil);
 end;
 
+procedure TNewDebug.AddBP(v:String;PassOver:boolean);
+begin
+  bpnts.items.add(v);
+  bps.assign(bpnts.items);
+  if assigned(frmdis) and PassOver then
+   frmdis.AddBreakPoint(v);
+end;
+
+procedure TNewDebug.RemoveBP(v:String;PassOver:boolean);
+var idx:integer;
+begin
+   idx:=bpnts.Items.IndexOf(v);
+   if idx<>-1 then
+   begin
+    if assigned(frmdis) and passover then
+     frmdis.RemoveBreakPoint(bpnts.Items[idx]);
+    bpnts.Items.delete(idx);
+    bps.assign(bpnts.items);
+   end;
+end;
+
+
 procedure TNewDebug.Button3Click(Sender: TObject);
 var v:String;
 begin
  if inputquery('Address (HEX)','Value:',v) then
  Begin
-  bpnts.items.add(v);
-  bps.assign(bpnts.items);
+    AddBP(v,true);
  End;
 end;
 
@@ -328,14 +391,15 @@ procedure TNewDebug.Button4Click(Sender: TObject);
 begin
    if bpnts.itemindex<>-1 then
    Begin
-    bpnts.Items.delete(bpnts.itemindex);
-    bps.assign(bpnts.items);
+     RemoveBP(bpnts.Items[bpnts.itemindex],true);
    End;
 end;
 
 function TNewDebug.CheckBreak(Const pc:Word):boolean;
 begin
  result:=false;
+ if assigned(frmdis) then
+    frmdis.SetPC(pc);
  if fnewbrain.debugging then exit;
  if not visible then exit;
  if bps=nil then exit;
@@ -347,6 +411,8 @@ begin
   Stopped:=true;
   fnewbrain.debugging:=true;
   ods('BreakPoint Reached at PC :'+inttostr(pc)+' '+inttohex(PC,4));
+ if assigned(frmdis) then
+    frmdis.SetPC(pc);  //just for paint
  End;
 end;
 

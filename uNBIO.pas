@@ -38,8 +38,12 @@ uses upccomms,classes;
 {$i 'dsp.inc'}
 
 type
+
+   TKeybState=(NoKey,SigKey,SendKey);
+
   TNBInOutSupport=Class
   private
+    KBStatus:TKeybState;//if true we send the data key
     ACIACtrlReg: Byte;
     PRNOutDataInt: Boolean;
     PRNDataBusInt: Boolean;//D4 in port 20 in
@@ -367,10 +371,15 @@ end;
 
 //PIBOX Support End
 
+var copready:boolean=false;
+
 //Read COP Status
 function TNBInOutSupport.DoPort20In(Value: Byte): byte;
+
 Begin
+
   result:=0;
+
 
   //bit 0
 
@@ -384,7 +393,8 @@ Begin
   if TestBit(EnableReg,7) and //bit 7 set
      Not TestBit(EnableReg,6) //bit 6 not set
   then       // tape in
-     result:=0;
+   if not cop420.Loading then
+     result:=1;
 
   // 01= 40/80
   if not TestBit(EnableReg,7) and //bit 7 not set
@@ -448,12 +458,16 @@ Begin
   Else
     PRNOutDataInt:=PRNOutDataInt;
 
-  Userint:= PRNDataBusInt;
+ { Userint:= PRNDataBusInt;
 
   if not userint then          //parallel Data bus port int if not set
    result:=result or 16   //User int if not set
   Else
-    PRNDataBusInt:=PRNDataBusInt;
+    PRNDataBusInt:=PRNDataBusInt;}
+
+  if copready then
+    result:=result or 16; //cop ready
+  copready:=not copready;
 
   if not clockint then
    result:=result or 32;//clock int if not set
@@ -727,124 +741,311 @@ Begin
   dmCommd.PrinterSend(10);
 End;
 
+
 function TNBInOutSupport.DoPort6In(Value: Byte): Byte;
 Var DoBreak:Boolean;
 
-    Function CheckKeyboard(var res:Byte):Boolean;
-    Begin
-      Result:=False;
-      DoBreak:=brkPressed ;// *
-      if DoBreak then
-      Begin
-       Res:=res or $4;
+    procedure filegetbyte;
+    begin
+   //get 1 byte
+      try
+        result:=cop420.ReadComm;
+       // ODS('$'+inttohex(prepc)+' COP BYTE:'+inttostr(result)+' '+inttohex(result,2)+ ' ['+ inttohex(EnableReg)+']');
+      except
+      end;
+    end;
 
-       //   Result:=result or $2;
-       nbmem.rom[$3c]:=nbmem.rom[$3c] or $2;
-       nbmem.rom[$3c]:=nbmem.rom[$3c] or $4;
-      End;
-
+    procedure KBgetbyte;
+    begin
       if kbint then
-      Begin
-        If ccc=0 then
-        Begin
-      //   fnewbrain.statusbar1.panels[2].text:='Key was Pressed';
-         res:=res or 16;
-         res:=res or 32;
-        End;
-        if lastcopcmd=$080 then
-        Begin
-          Inc(ccc);
-          res:=keypressed;
-          if ccc>1 then
-          Begin
-         //   fnewbrain.statusbar1.panels[2].text:='Key was Read';
+      begin
             kbint:=false;
-            ccc:=0;
-            res:=keypressed;
+            result:=keypressed;
             KeyPressed:=$80;
             if DoBreak then
              BrkPressed:=false;
-          End;
-        End
-        Else
-        Begin
-          ccc:=0;
-       //   fnewbrain.statusbar1.panels[2].text:='';
-        End;
-        Result:=true
-      End;//if kbint
-    End;
+//            cop420.CopBytesToRead:=cop420.CopBytesToRead-1;
+//            if cop420.CopBytesToRead=0 then
+//              cop420.CopState:=NewCMD;
+            exit;
+      end;
+    end;
+
+const
+  BRKBIT =$04;
+  REGINT =$00;        //copstatus bits here
+  CASSERR=$10;
+  CASSIN =$20;
+  KBD    =$30;
+  CASSOUT=$40;
 
 
-Begin
-  InterruptServed:=true;
-  copint:=false;
+  procedure getInterruptVector;
+  var i:integer;
+  begin
+     if brkpressed then
+     Begin
+       result:=result or BRKBIT;
+       brkpressed:=false;
+       exit;
+     end;
 
-  result:=0;
-  if lastcopcmd=$80 then
-   result:=result or 1;
+     if cop420.Loading and cop420.CassError then
+     begin
+       result:=CASSERR;
+       exit;
+     end;
 
- // fnewbrain.statusbar1.panels[2].text:='';
+     if cop420.Loading and (cop420.LastCopCommand=DISPCOM)  then
+     begin
+       //ODS('-----------DISPLAY COMMAND----------------');
+       result:=REGINT or (cop420.LastCopCommand and $f);//cassin
+       if NBMEM.rom[$3b]=$8C then //should be $A0 or else we loose 2 zero bytes  WHYYYYYY?
+       begin //this is a workaround not a fix
+         i:=COP420.ReadComm;
+       //  ODS('$'+inttohex(prepc)+'*COPNBYTE:'+inttostr(i)+' '+inttohex(i,2));
+         i:=COP420.ReadComm;
+       //  ODS('$'+inttohex(prepc)+'*COPNBYTE:'+inttostr(i)+' '+inttohex(i,2));
+       end;
 
-  if CheckKeyboard(Result) then exit;
+       exit;
+     end;
+
+     //this is special case casue the screen is enabled so we give data too
+     if KBStatus=SendKey then //after loop read the real key
+     Begin
+       KBStatus:=NoKey;
+       KBgetbyte;
+     end
+     else if KBStatus=SigKey then //NB expects byte dif from $80  to leave the loop
+     begin
+       Result:=$85; //just to leave the loop
+       KBStatus:=SendKey;
+     end
+     else
+     if kbint then
+     begin
+       KBStatus:=SigKey;   //signal cop has a key
+       result:=result or KBD;     //3X means kbd int
+     end;
+
+     if cop420.Loading then
+     begin
+       result:=CASSIN or (cop420.LastCopCommand and $f)   //0
+     end;
+
+     if cop420.Saving then
+      result:=result or CASSOUT;
+  end;
+
+  procedure getData;
+  begin
+     if (cop420.LastCopCommand=DISPCOM) then
+     begin
+       // ODS('-----------DISPLAY COMMAND 2----------------');
+     end;
+
+     if cop420.Loading then
+           filegetbyte;
+
+  end;
+
+  //for regint
    //bit 0 = timer0
    //bit 1 = power low
    //bit 2 = Brk
    //bit 3 = resp
    //bits 0-2 goes to Copst
+
+Begin
+  InterruptServed:=true;
+  copint:=false;
+  result:=$0;
+
+  if (enablereg shr 4 <> 0) then
+          getData
+  else  getInterruptVector;
+
+
+  exit;
+
+
+   if cop420.Loading and cop420.CassError then
+   begin
+     result:=$10;
+     exit;
+   end;
+
+
+  result:=$0;
+
+
+  if (cop420.LastCopCommand=DISPCOM) and not cop420.loading then
+  begin
+   result:=result;// or 16 or 4; //set bit 5 and 3
+   exit;
+  end;
+
+  if (cop420.LastCopCommand=DISPCOM)  and (enablereg shr 4 = 0) then
+  begin
+     ODS('-----------DISPLAY COMMAND----------------');
+     result:=CASSIN or (cop420.LastCopCommand and $f); //;8;
+     exit;
+  end
+  else  if (cop420.LastCopCommand=DISPCOM)  and (enablereg shr 4 <> 0) then
+  begin
+    ODS('-----------DISPLAY COMMAND 2----------------');
+  end;
+
+  if brkpressed then
+  Begin
+     result:=result or $4;
+     brkpressed:=false;
+     exit;
+  end;
+
+  if KBStatus=SendKey then //after loop read the real key
+  Begin
+    KBStatus:=NoKey;
+    KBgetbyte;
+  end
+  else if KBStatus=SigKey then //NB expects byte dif from $80  to leave the loop
+  begin
+   Result:=$85; //just to leave the loop
+   KBStatus:=SendKey;
+  end
+  else
+  if kbint then
+  begin
+   KBStatus:=SigKey;   //signal cop has a key
+   result:=result or KBD;     //3X means kbd int
+  end;
+
+
   if cop420.Loading then
-   result:=result or 48;
+  begin
+    if enablereg shr 4 = 0 then
+         result:=$20 or (cop420.LastCopCommand and $f)   //0
+    else
+       filegetbyte;
+
+    exit;
+  end;
+
   if cop420.Saving then
    result:=result or 64;
+
+
+
+  //for regint
+   //bit 0 = timer0
+   //bit 1 = power low
+   //bit 2 = Brk
+   //bit 3 = resp
+   //bits 0-2 goes to Copst
+{  if cop420.Loading then
+   result:=result or 48;
+  if cop420.Saving then
+   result:=result or 64;}
+
 End;
 
 //Cop Communication mainly the vf display
-// we could use it for tape loading , saving as
-// well but we do it faster
+//  tape loading , saving
+
+var lastout:byte;
 procedure TNBInOutSupport.DoPort6Out(Value: Byte);
 Var oldcmd:Integer;
     s:String;
+    cancelDISP:boolean;
 Begin
    s:='';
 
+
+   if cop420.saving and (enablereg shr 4 <> 0) then //write a byte to file
+   begin
+     Cop420.Writecomm(value);
+     exit;
+   end;
+
+   if cop420.loading and (cop420.LastCopCommand=value) and (value=DISPCOM) then
+   begin
+    ODS('GET A BYTE?');
+   end;
+
+
    oldcmd:=LastCopcmd;
-   If (OldCmd=$A0) and (Length(vfbuf)<18) then
+
+  // if not ((lastout=DISPCOM) and (value=DISPCOM) and (length(vfbuf)=0)) then
+  cancelDISP:= (lastout=DISPCOM) and (value<>32) and (Length(vfbuf)=0); //cancel dispcom
+
+
+
+   If (cop420.LastCopCommand=$A0) and (Length(vfbuf)<18) and not cancelDISP  then
    Begin
      s:=chr(Value);
      vfbuf:=s+vfbuf;
+     //ODS('COP DISP INP '+inttostr(Value));
      Exit;
    End;
 
+   lastout:=value;
+   Cop420.CheckCommand(oldcmd,Value);
+
+
+   //when command is $80 casscom
+   //when bit 0=1 is
+   //when bit 1=1 is
+   //when bit 2=1 is playback on
+   //when bit 3=1 is
+
+
    LastCopcmd:=Value;
+
    case value of
-   $080:s:='CASSCOM';//CASSCOM      1
-   $090:s:='PASSCOM'; //PASSCOM
+   $080:Begin
+    {$IFDEF NBDEBUG}
+          s:='CASSCOM'+'  ENREG:'+inttohex(EnableReg);;//CASSCOM      1
+     {$ENDIF}
+        End;
+   $08C:Begin  //Loading
+       {$IFDEF NBDEBUG}
+        s:='CASSLOD'+' ENREG:'+inttohex(EnableReg);   {$ENDIF}
+        End;
+   $090:    {$IFDEF NBDEBUG} s:='PASSCOM'+' ENREG:'+inttohex(EnableReg)  {$ENDIF}; //PASSCOM
    $0A0:Begin
-          s:='DISPCOM '; //DISPCOM      1 for vf display
+       {$IFDEF NBDEBUG}
+          s:='DISPCOM '+' ENREG:'+inttohex(EnableReg); {$ENDIF} //DISPCOM      1 for vf display
           vfbuf:='';
         End;
-   $0B0:s:='TIMCOM'; //TIMCOM       1
-   $0C0:s:='PDNCOM'; //PDNCOM
+   $0B0:    {$IFDEF NBDEBUG} s:='TIMCOM' {$ENDIF}; //TIMCOM       1
+   $0C0:    {$IFDEF NBDEBUG} s:='PDNCOM' {$ENDIF}; //PDNCOM
    $0D0:Begin
+
          if oldcmd<>$D0 then
          Begin
            nbscreen.PaintLeds(vfbuf);
-//           Nbscreen.PaintLeds;
          End;
            //Refresh vf disp
-         s:='NULLCOM';
+     {$IFDEF NBDEBUG}
+         s:='NULLCOM'+' ENREG:'+inttohex(EnableReg); {$ENDIF}
         End;
-   $0F0:s:='RESCOM'; //RESCOM
+   $0E0:    {$IFDEF NBDEBUG} s:='???COM' {$ENDIF};
+   $0F0:    {$IFDEF NBDEBUG} s:='RESCOM' {$ENDIF}; //RESCOM
    else
     Begin
      //copint:=true;
-     ODS('LastCop Cmd='+s+' '+inttostr(Value));
+    {$IFDEF NBDEBUG}
+     ODS('LastCop Cmd='+s+' '+inttostr(Value)); {$ENDIF}
      LastCopcmd:=oldcmd;
      Exit;
     End;
    end;
+   {$IFDEF NBDEBUG}
    if value<>$0d0 then
     ods(s);
+   {$ENDIF}
+
 End;
 
 procedure TNBInOutSupport.DoPort7Out(Value: Byte);
@@ -860,8 +1061,8 @@ procedure TNBInOutSupport.DoPort7Out(Value: Byte);
      End;
    End;
 Begin
- if value<>14 then
-  ODS('port 7='+inttostr(value));
+ //if value<>14 then
+  //ODS('port 7='+inttostr(value));
  if TestBit(Value,4) and TestBit(Value,5) then
   dmCommd.OpenComm(pcpcom1);
 
@@ -885,6 +1086,8 @@ Begin
  Begin
      //ReadAbyte;
  End;
+
+ //model A
  EnableReg:=Value;
  if enablereg and 1=1 then //clock enable   =set bit 0
   clkenabled:=false
@@ -965,7 +1168,12 @@ Begin
 
    //inc(pn);
    //if pn=1 then
-   Nbscreen.Paintvideo;
+
+   TThread.Queue(nil, procedure
+    begin
+      Nbscreen.Paintvideo // safely call with thread info
+    end);
+
   // sleep(nbdel);
   Except
   End;

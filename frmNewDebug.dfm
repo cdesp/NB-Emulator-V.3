@@ -1,6 +1,7 @@
 object NewDebug: TNewDebug
   Left = 347
   Top = 178
+  BorderStyle = bsSizeToolWin
   Caption = 'NewDebug'
   ClientHeight = 585
   ClientWidth = 697
@@ -11,12 +12,10 @@ object NewDebug: TNewDebug
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   KeyPreview = True
-  OldCreateOrder = False
   OnClose = FormClose
   OnCreate = FormCreate
   OnKeyUp = FormKeyUp
   OnShow = FormShow
-  PixelsPerInch = 96
   TextHeight = 13
   object Splitter1: TSplitter
     Left = 0
@@ -54,7 +53,7 @@ object NewDebug: TNewDebug
       Top = 72
       Width = 23
       Height = 22
-      Hint = 'Continue'
+      Hint = 'Continue (F9)'
       Caption = 'C'
       ParentShowHint = False
       ShowHint = True
@@ -65,7 +64,7 @@ object NewDebug: TNewDebug
       Top = 72
       Width = 23
       Height = 22
-      Hint = 'Debug'
+      Hint = 'Debug (F11)'
       Caption = 'D'
       ParentShowHint = False
       ShowHint = True
@@ -76,7 +75,7 @@ object NewDebug: TNewDebug
       Top = 72
       Width = 23
       Height = 22
-      Hint = 'Single Step'
+      Hint = 'Single Step (F8)'
       Caption = 'S'
       ParentShowHint = False
       ShowHint = True
@@ -112,22 +111,13 @@ object NewDebug: TNewDebug
       ShowHint = True
       OnClick = SpeedButton5Click
     end
-    object CheckBox1: TCheckBox
-      Left = 296
-      Top = 2
-      Width = 97
-      Height = 19
-      TabStop = False
-      Caption = 'Debug Info'
-      TabOrder = 0
-    end
     object Button3: TButton
       Left = 8
-      Top = 8
+      Top = 6
       Width = 25
       Height = 25
       Caption = '+'
-      TabOrder = 1
+      TabOrder = 0
       OnClick = Button3Click
     end
     object bpnts: TComboBox
@@ -135,15 +125,15 @@ object NewDebug: TNewDebug
       Top = 8
       Width = 97
       Height = 21
-      TabOrder = 2
+      TabOrder = 1
     end
     object Button4: TButton
       Left = 144
-      Top = 8
+      Top = 6
       Width = 25
       Height = 25
       Caption = '-'
-      TabOrder = 3
+      TabOrder = 2
       OnClick = Button4Click
     end
     object Offset: TEdit
@@ -151,7 +141,7 @@ object NewDebug: TNewDebug
       Top = 8
       Width = 49
       Height = 21
-      TabOrder = 4
+      TabOrder = 3
       Text = '2048'
       Visible = False
     end
@@ -160,17 +150,9 @@ object NewDebug: TNewDebug
       Top = 8
       Width = 25
       Height = 25
-      TabOrder = 5
+      TabOrder = 4
       Visible = False
       OnClick = Button5Click
-    end
-    object CheckBox2: TCheckBox
-      Left = 296
-      Top = 21
-      Width = 97
-      Height = 17
-      Caption = 'Stepped'
-      TabOrder = 6
     end
     object Streams: TButton
       Left = 384
@@ -178,7 +160,7 @@ object NewDebug: TNewDebug
       Width = 57
       Height = 33
       Caption = 'Streams'
-      TabOrder = 7
+      TabOrder = 5
       OnClick = StreamsClick
     end
     object Search: TButton
@@ -187,7 +169,7 @@ object NewDebug: TNewDebug
       Width = 75
       Height = 25
       Caption = 'Search'
-      TabOrder = 8
+      TabOrder = 6
       OnClick = SearchClick
     end
     object edSrch: TEdit
@@ -195,14 +177,14 @@ object NewDebug: TNewDebug
       Top = 64
       Width = 297
       Height = 21
-      TabOrder = 9
+      TabOrder = 7
     end
     object Edit1: TEdit
       Left = 552
       Top = 8
       Width = 73
       Height = 21
-      TabOrder = 10
+      TabOrder = 8
       Text = '-1'
       TextHint = 'Override Dev33 Page'
       Visible = False
@@ -213,7 +195,7 @@ object NewDebug: TNewDebug
       Top = 32
       Width = 73
       Height = 21
-      TabOrder = 11
+      TabOrder = 9
       Text = '-1'
       TextHint = 'Override Dev33 Page'
       Visible = False
@@ -224,11 +206,29 @@ object NewDebug: TNewDebug
       Top = 39
       Width = 73
       Height = 21
-      TabOrder = 12
+      TabOrder = 10
       Text = '-1'
       TextHint = 'Override Video Page'
       Visible = False
       OnKeyUp = Edit3KeyUp
+    end
+    object Button1: TButton
+      Left = 206
+      Top = 6
+      Width = 25
+      Height = 25
+      Caption = 'SV'
+      TabOrder = 11
+      OnClick = Button1Click
+    end
+    object Button2: TButton
+      Left = 175
+      Top = 6
+      Width = 25
+      Height = 25
+      Caption = 'LD'
+      TabOrder = 12
+      OnClick = Button2Click
     end
   end
   object Memo1: TMemo
