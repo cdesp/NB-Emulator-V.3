@@ -5,6 +5,7 @@ object frmdis: Tfrmdis
   ClientHeight = 763
   ClientWidth = 1008
   Color = clBtnFace
+  DefaultMonitor = dmDesktop
   DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -29,7 +30,6 @@ object frmdis: Tfrmdis
     ActivePage = TSDis
     Align = alClient
     TabOrder = 0
-    ExplicitWidth = 844
     object TSDis: TTabSheet
       Caption = 'Disassembler'
       object Splitter1: TSplitter
@@ -58,7 +58,6 @@ object frmdis: Tfrmdis
         ParentDoubleBuffered = False
         ParentFont = False
         TabOrder = 0
-        ExplicitWidth = 533
         object pbShow: TPaintBox
           Left = 1
           Top = 1
@@ -86,7 +85,6 @@ object frmdis: Tfrmdis
           PageSize = 0
           TabOrder = 0
           OnChange = ScrollBar1Change
-          ExplicitLeft = 510
         end
       end
       object Panel3: TPanel
@@ -98,7 +96,6 @@ object frmdis: Tfrmdis
         Color = clBlack
         Constraints.MaxWidth = 447
         TabOrder = 1
-        ExplicitLeft = 389
         object PbData: TPaintBox
           Left = 1
           Top = 1
@@ -132,7 +129,6 @@ object frmdis: Tfrmdis
           PageSize = 0
           TabOrder = 0
           OnChange = ScrollBar2Change
-          ExplicitLeft = 277
         end
       end
       object Panel1: TPanel
@@ -143,7 +139,6 @@ object frmdis: Tfrmdis
         Align = alTop
         FullRepaint = False
         TabOrder = 2
-        ExplicitWidth = 836
         object SpeedButton7: TSpeedButton
           Left = 10
           Top = 68
@@ -536,7 +531,6 @@ object frmdis: Tfrmdis
         Height = 41
         Align = alTop
         TabOrder = 0
-        ExplicitWidth = 836
         object SpeedButton1: TSpeedButton
           Left = 9
           Top = 2
@@ -1029,7 +1023,6 @@ object frmdis: Tfrmdis
         ParentFont = False
         TabOrder = 1
         OnChange = PageControl2Change
-        ExplicitWidth = 836
         object TSProj: TTabSheet
           Caption = 'Project'
           ImageIndex = 6
@@ -1052,7 +1045,6 @@ object frmdis: Tfrmdis
             WordWrap = False
             OnKeyPress = asmTextKeyPress
             OnMouseMove = asmTextMouseMove
-            ExplicitWidth = 828
           end
         end
         object TSSource: TTabSheet
@@ -1076,7 +1068,6 @@ object frmdis: Tfrmdis
             WordWrap = False
             OnKeyPress = asmTextKeyPress
             OnMouseMove = asmTextMouseMove
-            ExplicitWidth = 828
           end
         end
         object TSBinary: TTabSheet
@@ -1105,7 +1096,6 @@ object frmdis: Tfrmdis
             OnKeyDown = BinTextKeyDown
             OnKeyPress = asmTextKeyPress
             OnMouseMove = asmTextMouseMove
-            ExplicitWidth = 828
           end
         end
         object TSSymbols: TTabSheet
@@ -1131,7 +1121,6 @@ object frmdis: Tfrmdis
             TabOrder = 0
             OnKeyPress = asmTextKeyPress
             OnMouseMove = asmTextMouseMove
-            ExplicitWidth = 828
           end
         end
         object TSGlob: TTabSheet
@@ -1157,7 +1146,6 @@ object frmdis: Tfrmdis
             TabOrder = 0
             OnKeyPress = asmTextKeyPress
             OnMouseMove = asmTextMouseMove
-            ExplicitWidth = 828
           end
         end
         object TSMessages: TTabSheet
@@ -1180,7 +1168,6 @@ object frmdis: Tfrmdis
             TabOrder = 0
             OnKeyPress = asmTextKeyPress
             OnMouseMove = asmTextMouseMove
-            ExplicitWidth = 828
           end
         end
         object TSErrors: TTabSheet
@@ -1203,7 +1190,6 @@ object frmdis: Tfrmdis
             TabOrder = 0
             OnKeyPress = asmTextKeyPress
             OnMouseMove = asmTextMouseMove
-            ExplicitWidth = 828
           end
         end
         object TabSheet1: TTabSheet
@@ -1311,7 +1297,6 @@ object frmdis: Tfrmdis
             ParentColor = False
             ParentFont = False
             TabOrder = 0
-            ExplicitWidth = 828
           end
           object Button1: TButton
             Left = 112
@@ -1434,7 +1419,6 @@ object frmdis: Tfrmdis
             ItemHeight = 13
             TabOrder = 13
             OnDblClick = ListBox1DblClick
-            ExplicitWidth = 828
           end
           object Button7: TButton
             Left = 255
@@ -1545,7 +1529,6 @@ object frmdis: Tfrmdis
             Width = 300
           end>
         OnDblClick = StatusBar1DblClick
-        ExplicitWidth = 836
       end
     end
   end

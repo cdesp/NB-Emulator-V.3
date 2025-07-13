@@ -86,6 +86,9 @@
         <Icon_MainIcon>NewBrain_Icon.ico</Icon_MainIcon>
         <Debugger_DebugSourcePath>G:\_Programming\NB Emulator\Emulation\Z80Package\;$(Debugger_DebugSourcePath)</Debugger_DebugSourcePath>
         <AppDPIAwarenessMode>PerMonitor</AppDPIAwarenessMode>
+        <VerInfo_MajorVer>3</VerInfo_MajorVer>
+        <VerInfo_Release>4</VerInfo_Release>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=3.0.4.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
@@ -101,10 +104,10 @@
         <VerInfo_MajorVer>3</VerInfo_MajorVer>
         <VerInfo_Build>12</VerInfo_Build>
         <VerInfo_PreRelease>true</VerInfo_PreRelease>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=3.0.3.12;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=3.0.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=3.0.4.12;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=3.0.4.4;Comments=</VerInfo_Keys>
         <DCC_UnitSearchPath>G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\Z80Package\Win32\Debug;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
-        <VerInfo_Release>3</VerInfo_Release>
+        <VerInfo_Release>4</VerInfo_Release>
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
     </PropertyGroup>
     <ItemGroup>
@@ -214,6 +217,7 @@
         <DCCReference Include="Z80Package\Z80BaseClass.pas">
             <Form>$R *.res</Form>
         </DCCReference>
+        <DCCReference Include="uNBCassette.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -243,6 +247,12 @@
             </Delphi.Personality>
             <Deployment Version="5">
                 <DeployFile LocalName="..\Runtime\NewBrain.exe" Configuration="Debug" Class="ProjectOutput"/>
+                <DeployFile LocalName="..\Runtime\NewBrain.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>NewBrain.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="..\Runtime\NewBrain.exe" Configuration="Release" Class="ProjectOutput"/>
                 <DeployFile LocalName="UDISASM.PAS" Configuration="Debug" Class="ProjectFile"/>
                 <DeployFile LocalName="UDISASM.PAS" Configuration="Release" Class="ProjectFile"/>
@@ -1202,6 +1212,7 @@
                 <Platform value="Win32">True</Platform>
                 <Platform value="Win64">False</Platform>
             </Platforms>
+            <ModelSupport>False</ModelSupport>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>

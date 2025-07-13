@@ -439,6 +439,7 @@ end;
 
 procedure TNewDebug.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
+  fnewbrain.SaveFormPos(self);
   fNewbrain.Debug2.Checked:=False;
 end;
 
@@ -447,6 +448,7 @@ begin
  if bps=nil then
   bps:=tstringlist.create;
  bps.assign(bpnts.items);
+ fNewbrain.LoadFormPos(self);
 end;
 
 //Step or free run

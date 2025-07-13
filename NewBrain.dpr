@@ -41,7 +41,9 @@ uses
   uUpdate in 'uUpdate.pas' {frmUpdate},
   uz80dsm in 'uz80dsm.pas' {frmDisasm},
   Z80Intf in 'Z80Intf.pas',
-  Z80BaseClass in 'Z80Package\Z80BaseClass.pas';
+
+  Z80BaseClass in 'Z80Package\Z80BaseClass.pas' {$R *.res},
+  uNBCassette in 'uNBCassette.pas';
 
 {$R *.res}
 

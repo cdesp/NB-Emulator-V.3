@@ -4,9 +4,10 @@ object fNewBrain: TfNewBrain
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'NEWBRAIN Pro By Despsoft'
-  ClientHeight = 629
+  ClientHeight = 669
   ClientWidth = 668
   Color = 764381
+  DefaultMonitor = dmDesktop
   DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -160,7 +161,7 @@ object fNewBrain: TfNewBrain
     000000000000000000000000000000000000000000000000000000000000}
   KeyPreview = True
   Menu = MainMenu1
-  Position = poScreenCenter
+  Position = poDesigned
   StyleElements = []
   StyleName = 'Windows'
   OnActivate = FormActivate
@@ -176,7 +177,7 @@ object fNewBrain: TfNewBrain
   TextHeight = 13
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 610
+    Top = 650
     Width = 668
     Height = 19
     Panels = <
@@ -234,11 +235,11 @@ object fNewBrain: TfNewBrain
         object LedDisp: TJDLed
           Left = 20
           Top = 9
-          Width = 371
+          Width = 374
           Height = 25
           Thick = 2
           Colour = 4259648
-          Text = 'VERSION 3.04B1'
+          Text = 'VERSION 3.04B3'
           Len = 16
           LedWidth = 20
           BackColor = clBlack
@@ -386,13 +387,23 @@ object fNewBrain: TfNewBrain
           Top = 0
           Action = acTapeSelect
         end
-        object ToolButton5: TToolButton
+        object ToolButton10: TToolButton
           Left = 211
+          Top = 0
+          Action = acTapeSelect2
+        end
+        object ToolButton5: TToolButton
+          Left = 250
           Top = 0
           Action = acTapeManagement
         end
+        object ToolButton11: TToolButton
+          Left = 289
+          Top = 0
+          Action = acTapeManagement2
+        end
         object ToolButton6: TToolButton
-          Left = 250
+          Left = 328
           Top = 0
           Action = acDiskManagement
         end
@@ -432,6 +443,154 @@ object fNewBrain: TfNewBrain
       Traces = <>
       OnKeyDown = FormKeyDown
       OnKeyUp = FormKeyUp
+    end
+  end
+  object Panel7: TPanel
+    Left = 0
+    Top = 610
+    Width = 668
+    Height = 40
+    Align = alBottom
+    TabOrder = 3
+    object Panel8: TPanel
+      Left = 1
+      Top = 1
+      Width = 332
+      Height = 38
+      Align = alLeft
+      Color = clHighlight
+      Enabled = False
+      ParentBackground = False
+      TabOrder = 0
+      object Label1: TLabel
+        Left = 1
+        Top = 1
+        Width = 330
+        Height = 13
+        Align = alTop
+        Alignment = taCenter
+        Caption = 'Tape1'
+        Color = clSkyBlue
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clDarkred
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = [fsBold]
+        ParentColor = False
+        ParentFont = False
+        Transparent = False
+        ExplicitWidth = 37
+      end
+      object lblTape1Info: TLabel
+        Left = 201
+        Top = 17
+        Width = 128
+        Height = 19
+        Alignment = taRightJustify
+        AutoSize = False
+        Color = clWhite
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'MS Sans Serif'
+        Font.Style = [fsBold]
+        ParentColor = False
+        ParentFont = False
+        ParentShowHint = False
+        ShowHint = True
+        Transparent = False
+      end
+      object lblTape1Info2: TLabel
+        Left = 3
+        Top = 17
+        Width = 78
+        Height = 19
+        Cursor = crHandPoint
+        AutoSize = False
+        Caption = 'No Tape'
+        Color = clWhite
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'MS Sans Serif'
+        Font.Style = [fsBold]
+        ParentColor = False
+        ParentFont = False
+        ParentShowHint = False
+        ShowHint = True
+        Transparent = False
+        OnClick = lblTape1Info2Click
+      end
+    end
+    object Panel9: TPanel
+      Left = 333
+      Top = 1
+      Width = 332
+      Height = 38
+      Align = alLeft
+      Color = clForestgreen
+      Enabled = False
+      ParentBackground = False
+      TabOrder = 1
+      object Label2: TLabel
+        Left = 1
+        Top = 1
+        Width = 330
+        Height = 13
+        Align = alTop
+        Alignment = taCenter
+        Caption = 'Tape2'
+        Color = clSkyBlue
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clDarkred
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = [fsBold]
+        ParentColor = False
+        ParentFont = False
+        Transparent = False
+        ExplicitWidth = 37
+      end
+      object lblTape2Info: TLabel
+        Left = 200
+        Top = 17
+        Width = 128
+        Height = 19
+        Alignment = taRightJustify
+        AutoSize = False
+        Color = clWhite
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'MS Sans Serif'
+        Font.Style = [fsBold]
+        ParentColor = False
+        ParentFont = False
+        ParentShowHint = False
+        ShowHint = True
+        Transparent = False
+      end
+      object lblTape2Info2: TLabel
+        Left = 3
+        Top = 17
+        Width = 78
+        Height = 19
+        Cursor = crHandPoint
+        AutoSize = False
+        Caption = 'No Tape'
+        Color = clWhite
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'MS Sans Serif'
+        Font.Style = [fsBold]
+        ParentColor = False
+        ParentFont = False
+        ParentShowHint = False
+        ShowHint = True
+        Transparent = False
+        OnClick = lblTape2Info2Click
+      end
     end
   end
   object MainMenu1: TMainMenu
@@ -689,6 +848,15 @@ object fNewBrain: TfNewBrain
     Images = ImageList1
     Left = 208
     Top = 112
+    object acTapeSelect: TAction
+      Category = 'Tape'
+      Caption = 'Tape1: Select File For Loading...'
+      Hint = 
+        'Tape 1'#13#10'Selects the next file to be loaded'#13#10'from the tape at the' +
+        ' next LOAD command'
+      ImageIndex = 3
+      OnExecute = SetBasicFile1Click
+    end
     object acStEmul: TAction
       Category = 'Emulation'
       Caption = 'Start Emulation'
@@ -696,6 +864,15 @@ object fNewBrain: TfNewBrain
       ImageIndex = 0
       ShortCut = 116
       OnExecute = Start1Click
+    end
+    object acTapeSelect2: TAction
+      Category = 'Tape'
+      Caption = 'Tape2: Select File For Loading...'
+      Hint = 
+        'Tape 2'#13#10'Selects the next file to be loaded '#13#10'from the tape at th' +
+        'e next LOAD command'
+      ImageIndex = 3
+      OnExecute = SetBasicFile1Click
     end
     object acRomSel: TAction
       Caption = 'Select Rom Version'
@@ -717,19 +894,10 @@ object fNewBrain: TfNewBrain
       ImageIndex = 2
       OnExecute = Options1Click
     end
-    object acTapeSelect: TAction
-      Category = 'Tape'
-      Caption = 'Select File For Loading...'
-      Hint = 
-        'Selects the next file to be loaded from the tape at the next LOA' +
-        'D command'
-      ImageIndex = 3
-      OnExecute = SetBasicFile1Click
-    end
     object acTapeManagement: TAction
       Category = 'Tape'
-      Caption = 'Tape Management'
-      Hint = 'Create & Manage Tapes'
+      Caption = 'Tape1: Tape Management'
+      Hint = 'Tape 1'#13#10'Create & Manage Tapes'
       ImageIndex = 4
       OnExecute = TapeManagement1Click
     end
@@ -744,12 +912,19 @@ object fNewBrain: TfNewBrain
       Category = 'Emulation'
       Caption = 'Action1'
     end
+    object acTapeManagement2: TAction
+      Category = 'Tape'
+      Caption = 'Tape2: Tape Management'
+      Hint = 'Tape 2'#13#10'Create & Manage Tapes'
+      ImageIndex = 4
+      OnExecute = TapeManagement1Click
+    end
   end
   object ImageList1: TImageList
     ColorDepth = cd32Bit
     Height = 32
     Width = 32
-    Left = 240
+    Left = 272
     Top = 112
     Bitmap = {
       494C010107000800040020002000FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600

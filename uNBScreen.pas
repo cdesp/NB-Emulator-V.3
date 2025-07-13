@@ -997,6 +997,7 @@ var x,y,nender:Integer;
     FormOffst :=
       Round(Fnewbrain.Panel1.Height * ScaleFactor) +
       Round(Fnewbrain.Panel2.Height * ScaleFactor) +
+      Round(Fnewbrain.Panel7.Height * ScaleFactor) +
       Round(Fnewbrain.StatusBar1.Height * ScaleFactor);
 
     // Full height with scaled values
@@ -1036,20 +1037,42 @@ var x,y,nender:Integer;
      End;
     End;
 
-    procedure DoPaintDX;
-    Begin
-       if not newscr.candraw then exit;
-       newscr.Surface.lock();
-       Newscr.Surface.Canvas.Draw(0, 0, ScaledImg);
-       Newscr.Surface.Canvas.Release;
-      {Flip the buffer}
-       try
-        newscr.surface.unlock;
-        Newscr.Flip;
-       except
-       end;
-    End;
 
+
+  procedure DoPaintDX;
+  var
+    R: TRect;
+  begin
+    if not newscr.CanDraw then Exit;
+
+    // Lock surface
+    newscr.Surface.Lock;
+    try
+      // Fill entire surface with a visible color
+      R := Rect(0, 0, newscr.Surface.Width, newscr.Surface.Height);
+      newscr.Surface.Canvas.Brush.Color := clFuchsia; // bright magenta
+      newscr.Surface.Canvas.FillRect(R);
+
+      // Draw ScaledImg if it is assigned
+      if Assigned(ScaledImg) then
+      begin
+        //newscr.Surface.Canvas.Draw(0, 0, ScaledImg);
+        newscr.Surface.Canvas.StretchDraw(R, ScaledImg);
+      end;
+
+      // Ensure the canvas updates
+      newscr.Surface.Canvas.Release;
+    finally
+      newscr.Surface.Unlock;
+    end;
+
+    // Flip the surface to display
+    try
+      newscr.Flip;
+    except
+      // Handle surface lost errors here if needed
+    end;
+  end;
 
 var
     brked:boolean;
@@ -1069,7 +1092,7 @@ begin
    if not newscr.candraw or (el=0) then exit;
    if not nbio.tvenabled then
    begin
-      ScaledImg.Fill(255);
+      ScaledImg.Fill(BlackColor);
       DoPaintDX;
       exit;
    end;
@@ -1218,28 +1241,32 @@ begin
    checkFPS;
 
 //   wid:=  Round(newscr.width * ScaleFactor);
+
    ScaledImg.Canvas.StretchDraw(Rect(0, 0, 640, 500), VirtImg);
    wid:=  ScaledImg.width;
    Canv:=ScaledImg.Canvas;
+   canv.Font.Color:=WhiteColor;
+   canv.font.Size:=8;
 
    if showfps then
    Begin
-    //Newscr.Surface.Canvas.TextOut(0,5 ,'Width    : '+inttostr(newscr.width));
-    //Newscr.Surface.Canvas.TextOut(0,25 ,'dpi    : '+inttostr(Screen.PixelsPerInch));
+    Canv.TextOut(0,5 ,'Width    : '+inttostr(newscr.width));
+    Canv.TextOut(0,25 ,'surfwid    : '+inttostr(newscr.Surfacewidth));
+    Canv.TextOut(0,45 ,'PPI    : '+inttostr(newscr.PixelsPerInch));
 
     Canv.TextOut(wid-100,5 ,'FPS    : '+inttostr(lastfps));
     Canv.TextOut(wid-100,25,'MULT.  : '+Floattostr(fnewbrain.Emuls)+'/'+Floattostr(fnewbrain.Mhz));
-    Canv.TextOut(newscr.width-100,45,'MHz    : '+Floattostr(fnewbrain.Emuls*4));
-    Canv.TextOut(newscr.width-100,65,'Delay  : '+inttostr(nbdel));
+    Canv.TextOut(wid-100,45,'MHz    : '+Floattostr(fnewbrain.Emuls*4));
+    Canv.TextOut(wid-100,65,'Delay  : '+inttostr(nbdel));
 //    Canv.TextOut(newscr.width-100,85,'Frm Skp: '+inttostr(maxpn));
-    Canv.TextOut(newscr.width-100,85,'COP: '+inttostr(CPTM));
-    Canv.TextOut(newscr.width-100,105,'CLK: '+inttostr(CkTm));
-    Canv.TextOut(newscr.width-100,125 ,'PNTEVERY: '+inttostr(paintevery));
-    Canv.TextOut(newscr.width-100,145 ,'SKIPPED : '+inttostr(LASTskipped));
+    Canv.TextOut(wid-100,85,'COP: '+inttostr(CPTM));
+    Canv.TextOut(wid-100,105,'CLK: '+inttostr(CkTm));
+    Canv.TextOut(wid-100,125 ,'PNTEVERY: '+inttostr(paintevery));
+    Canv.TextOut(wid-100,145 ,'SKIPPED : '+inttostr(LASTskipped));
     if doHardware in newscr.NowOptions then
-     Canv.TextOut(newscr.width-100,170,'HARDWARE')
+     Canv.TextOut(wid-100,170,'HARDWARE')
     else
-     Canv.TextOut(newscr.width-100,170,'SOFTWARE')
+     Canv.TextOut(wid-100,170,'SOFTWARE')
    end;
 
 

@@ -716,6 +716,7 @@ procedure Tfrmdis.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   if CommentsChanged then
     SaveComments;
+  fnewbrain.SaveFormPos(self);
   fCPUWin.Tag:=9;
   fCPUWin.Close;
   fCPUWin.free;
@@ -727,7 +728,7 @@ end;
 procedure Tfrmdis.FormCreate(Sender: TObject);
 Var i:integer;
 begin
- AdTerminal1.ScrollbackRows:=2000;
+  AdTerminal1.ScrollbackRows:=2000;
   label9.Font.Color:=clBlue;
   PageNo:=-1;
   nLen := 0;
@@ -762,6 +763,7 @@ begin
    except
       //may be same port opened by the emulator
    end;
+   fNewbrain.LoadFormPos(self);
 end;
 
 procedure Tfrmdis.FormKeyDown(Sender: TObject; var Key: Word;

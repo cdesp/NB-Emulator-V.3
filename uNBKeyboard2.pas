@@ -59,7 +59,6 @@ Type
        destructor Destroy; override;
        procedure Import(s:String);
        function GetPCKeyID: String;
-     published
        property NBSHIFTED: Boolean read FNBSHIFTED write FNBSHIFTED;
      End;
 

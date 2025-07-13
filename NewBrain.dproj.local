@@ -1,2 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<BorlandProject/>
+<BorlandProject>
+  <Transactions>
+    <Transaction>2025/07/11 09:03:22.957,=G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\Unit1.pas</Transaction>
+    <Transaction>2025/07/11 09:03:45.770,G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\uNBCassette.pas=G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\Unit1.pas</Transaction>
+  </Transactions>
+</BorlandProject>

@@ -223,8 +223,6 @@ function GetFiles(path, mode : AnsiString; list : TStrings): Boolean;
 Function DISKSIZE:Longint;
 
 Var
-
-
     NBDisc:PNBDiscRec=nil;
     NBDiscCtrl:TNBDISCCtrl=nil;
     NBDiskFileType:TNBDiskFileType; //Reading DSK file type

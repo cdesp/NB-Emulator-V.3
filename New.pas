@@ -141,6 +141,19 @@ type
     thrEmulate: TDXTimer;
     NBDigitizerv31: TMenuItem;
     Timer1: TTimer;
+    acTapeSelect2: TAction;
+    acTapeManagement2: TAction;
+    ToolButton10: TToolButton;
+    ToolButton11: TToolButton;
+    Panel7: TPanel;
+    Panel8: TPanel;
+    Label1: TLabel;
+    lblTape1Info: TLabel;
+    lblTape1Info2: TLabel;
+    Panel9: TPanel;
+    Label2: TLabel;
+    lblTape2Info: TLabel;
+    lblTape2Info2: TLabel;
     procedure Button1Click(Sender: TObject);
     procedure Start1Click(Sender: TObject);
     procedure FormKeyUp(Sender: TObject; var Key: Word;
@@ -200,6 +213,8 @@ type
     procedure thrEmulateTimer(Sender: TObject; LagCount: Integer);
     procedure NBDigitizerv31Click(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
+    procedure lblTape1Info2Click(Sender: TObject);
+    procedure lblTape2Info2Click(Sender: TObject);
 
 
   private
@@ -219,7 +234,6 @@ type
     procedure DoEmulation;
     function GetRoot: string;
     function CreateOpenDialog: TOpenDialog;
-    procedure MakeTapeButtons;
     procedure tpbtnClick(Sender: TObject);
     function GetOLDOS: Byte;
     procedure OpenFile(Fname: String);
@@ -227,6 +241,8 @@ type
     procedure DoOnidle(sender: TObject; var Done: Boolean);
     function getDebugging: Boolean;
     procedure setDebugging(const Value: Boolean);
+    procedure MakeTapeButtons(parent:TWinControl;tgSt:integer=0);
+    function GetScreenRatio: single;
 
   public
     { Public declarations }
@@ -238,6 +254,9 @@ type
 
     DoOne: Boolean;
     Constructor Create(Aowner:TComponent);Override;
+    function ScrNormalize(t: Integer): integer;
+    procedure LoadFormPos(frm: TForm);
+    procedure SaveFormPos(frm: TForm);
     procedure StartEmulation;
     procedure SuspendEmul;
     procedure ResumeEmul;
@@ -253,6 +272,7 @@ type
     property OLDOS: Byte read GetOLDOS;
     property Suspended: Boolean read IsSuspended;
     property Debugging:Boolean read getDebugging write setDebugging;
+    property screenratio:single read GetScreenRatio;
   end;
 
 
@@ -296,7 +316,7 @@ uses uz80dsm,math, frmNewDebug,jcllogic, frmChrDsgn, frmAbout, frmTapeMgmt,
      uNBMemory,uNBCOP,uNBIO,uNBCPM,uNBScreen,uNBTapes,uNBKeyboard2,
      frmDiskMgmt,mmsystem, frmOptions,shellapi, frmDrvInfo,SendKey,
      frmSplash,frmDisassembly,inifiles, frmRomVersion,ustrings, frmPeriferals,
-     frmInstructions, uUpdate,uStopwatch,z80intf;
+     frmInstructions, uUpdate,uStopwatch,z80intf,uNBCassette,PB.Winset;
 
 Var dbgsl:TStringlist=nil;
     stopwatch:TStopWatch;
@@ -688,7 +708,9 @@ constructor TfNewBrain.Create(Aowner: TComponent);
 begin
   inherited;
   acTapeSelect.enabled:=false;
+  acTapeSelect2.enabled:=false;
   acTapeManagement.enabled:=false;
+  acTapeManagement2.enabled:=false;
   acDiskManagement.enabled:=false;
   acReset.enabled:=false;
   acStEmul.Enabled:=true;
@@ -710,7 +732,9 @@ begin
   WithExpansion1.Enabled:=false;
   WithCpm1.enabled:=false;
   acTapeSelect.enabled:=true;
+  acTapeSelect2.enabled:=true;
   acTapeManagement.enabled:=true;
+  acTapeManagement2.enabled:=true;
   acDiskManagement.enabled:=true;
   acRomSel.Enabled:=false;
   ShowDriveContents1.enabled:=true;
@@ -719,6 +743,8 @@ begin
   LoadTextFile1.enabled:=true;
   Restart1.enabled:=true;
   Disassembly1.enabled:=true;
+  panel8.Enabled:=true;
+  panel9.Enabled:=true;;
   //Start Emulation
   BootOk:=false;
   try
@@ -726,11 +752,9 @@ begin
    freeandnil(nbio);
    freeandnil(nbmem);
    freeandnil(nbscreen);
-   freeandnil(TapeInfo);
   except
 
   end;
-  TapeInfo:=TTapeInfo.create;
   NBIO:=TNBInoutSupport.Create;
   COP420:=TCOP420.create;
   NBMem:=TNBMemory.Create;
@@ -811,78 +835,91 @@ begin
   nbkeyboard.PCKeyUp(Key,Shift);
 end;
 
-procedure TfNewBrain.MakeTapeButtons;
+function TfNewBrain.GetScreenRatio:single;
+begin
+   result:=screen.PixelsPerInch/screen.DefaultPixelsPerInch;
+end;
+
+function TfNewBrain.ScrNormalize(t:Integer):integer;
+begin
+  result:=trunc(t*screenratio);
+end;
+
+procedure TfNewBrain.MakeTapeButtons(parent:TWinControl;tgSt:integer=0);
 Var btn:TButton;
     bw,bh:Integer;
+    tp,lf:integer;
 Begin
- bw:=20;
- bh:=18;
+ bw:=ScrNormalize(20);
+ bh:=ScrNormalize(20);
+ tp:=ScrNormalize(16);
+ lf:=ScrNormalize(90);
 
  btn:=TButton.create(self);
- btn.Parent:=statusbar1;
- btn.left:=0;
- btn.top:=1;
+ btn.Parent:=parent;
+ btn.left:=lf;
+ btn.top:=tp;
  btn.width:=bw;
  btn.height:=bh;
  btn.font.Size:=6;
  btn.caption:='<<';
- btn.tag:=1;
+ btn.tag:=tgSt+1;
  btn.onClick:=tpbtnClick;
  btn.Hint:='First file on tape';
  btn.ShowHint:=true;
  btn.TabStop:=false;
 
  btn:=TButton.create(self);
- btn.Parent:=statusbar1;
- btn.left:=bw+1;
- btn.top:=1;
+ btn.Parent:=parent;
+ btn.left:=lf+bw+1;
+ btn.top:=tp;
  btn.width:=bw;
  btn.height:=bh;
  btn.font.Size:=6;
  btn.caption:='<';
- btn.tag:=2;
+ btn.tag:=tgSt+2;
  btn.onClick:=tpbtnClick;
  btn.Hint:='Previous file on tape';
  btn.ShowHint:=true;
  btn.TabStop:=false;
 
  btn:=TButton.create(self);
- btn.Parent:=statusbar1;
- btn.left:=2*(bw+1);
- btn.top:=1;
+ btn.Parent:=parent;
+ btn.left:=lf+2*(bw+1);
+ btn.top:=tp;
  btn.width:=bw;
  btn.height:=bh;
  btn.font.Size:=6;
  btn.caption:='>';
- btn.tag:=3;
+ btn.tag:=tgSt+3;
  btn.onClick:=tpbtnClick;
  btn.Hint:='Next file on tape';
  btn.ShowHint:=true;
  btn.TabStop:=false;
 
  btn:=TButton.create(self);
- btn.Parent:=statusbar1;
- btn.left:=3*(bw+1);
- btn.top:=1;
+ btn.Parent:=parent;
+ btn.left:=lf+3*(bw+1);
+ btn.top:=tp;
  btn.width:=bw;
  btn.height:=bh;
  btn.font.Size:=6;
  btn.caption:='>>';
- btn.tag:=4;
+ btn.tag:=tgSt+4;
  btn.onClick:=tpbtnClick;
  btn.Hint:='Last file on tape';
  btn.ShowHint:=true;
  btn.TabStop:=false;
 
  btn:=TButton.create(self);
- btn.Parent:=statusbar1;
- btn.left:=4*(bw+1);
- btn.top:=1;
+ btn.Parent:=parent;
+ btn.left:=lf+4*(bw+1);
+ btn.top:=tp;
  btn.width:=bw;
  btn.height:=bh;
  btn.font.Size:=6;
  btn.caption:='^';
- btn.tag:=5;
+ btn.tag:=tgSt+5;
  btn.onClick:=tpbtnClick;
  btn.Hint:='Eject tape';
  btn.ShowHint:=true;
@@ -890,31 +927,69 @@ Begin
 
 End;
 
+
+
 procedure TfNewBrain.tpbtnClick(Sender: TObject);
 Var btn:TButton;
+    Tapeinfo:TTapeInfo;
+    lbl:TLabel;
+    tg:integer;
 Begin
+  //done:select tape
+
   Self.activecontrol:=nil;
   if not (sender is tbutton) then exit;
+  btn:=TButton(sender);
+
+  if btn.Tag<10 then
+  begin
+    Tapeinfo:=Cop420.Cass1.TapeInfo;
+    lbl:=lblTape1Info;
+    tg:=btn.tag;
+  end
+  else
+  begin
+    Tapeinfo:=Cop420.Cass2.TapeInfo;
+    lbl:=lblTape2Info;
+    tg:=btn.tag-10;
+  end;
+
   if not tapeinfo.TapeLoaded then
   Begin
    ShowMessage('Load A Tape First');
    exit;
   End;
-  btn:=TButton(sender);
-  Case btn.tag of
+
+  Case tg of
    1:Tapeinfo.FirstFile;
    2:Tapeinfo.PrevFile;
    3:Tapeinfo.NextFile;
    4:Tapeinfo.LastFile;
    5:Tapeinfo.Eject;
   End;
-  fnewbrain.StatusBar1.Panels[0].Text:=Tapeinfo.GetNextFileName;
+  lbl.Caption:=Tapeinfo.GetNextFileName;
 End;
 
 procedure TfNewBrain.UpdateCheck1Click(Sender: TObject);
 begin
  frmUpdate.show;
 end;
+
+procedure TfNewBrain.LoadFormPos(frm:TForm);
+var inif:TIniFile;
+begin
+   //load form position
+   if fileexists(AppPath+'NBPos.ini') then
+   begin
+    inif:=TIniFile.create(AppPath+'NBPos.ini');
+    try
+      RestoreWindowstate(inif,frm,false);
+    finally
+      inif.free;
+    end;
+   end;
+end;
+
 
 procedure TfNewBrain.FormCreate(Sender: TObject);
 begin
@@ -931,7 +1006,9 @@ begin
     LoadCharMap
    else
     FillCharArray;
+   LoadFormPos(Self);
 end;
+
 
 
 
@@ -1327,11 +1404,6 @@ end;
 
 procedure TfNewBrain.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
- if assigned(cop420) then
- Begin
-  cop420.Closeprinter;
-  cop420.CloseComm;
- End;
  freeandnil(cop420);
  SaveOptions;
 end;
@@ -1368,25 +1440,35 @@ begin
    finally
      fRomVersion.free;
    end;
-   MakeTapeButtons;
+   MakeTapeButtons(Panel8); //Tape1
+   MakeTapeButtons(Panel9,10); //Tape2
    Debug2Click(Sender);
+   newscr.width:=ScrNormalize(640);
+   newscr.Height:=ScrNormalize(500);
+   newscr.SurfaceHeight := newscr.Height;
+   newscr.SurfaceWidth := newscr.Width;
 end;
 
 procedure TfNewBrain.SetBasicFile1Click(Sender: TObject);
+var cass:TNBCassette;
 begin
-  opendialog1.initialdir:=cop420.root;
+  //done:pick a file for each tape
+  if sender=acTapeSelect then
+    cass:=cop420.Cass1
+  else cass:=cop420.Cass2;
+  opendialog1.initialdir:=cass.root;
   if opendialog1.Execute then
   Begin
    if Sametext(extractfileext(opendialog1.FileName),'.bin') then
-    cop420.FileIsBinary:=true
+    cass.FileIsBinary:=true
    else
-    cop420.FileIsBinary:=false;
+    cass.FileIsBinary:=false;
 //   BinaryFile1.checked:=cop420.FileIsBinary;
-   cop420.filename:=Extractfilename(opendialog1.FileName);
-   cop420.filename:=ChangeFileExt(cop420.filename,'');
+   cass.filename:=Extractfilename(opendialog1.FileName);
+   cass.filename:=ChangeFileExt(cass.filename,'');
    delay(1,0);
    kbuf:='LOAD';
-   cop420.DoResetTape;
+   cass.DoResetTape;
 
   // nbkeyboard.import(kbuf);
   End;
@@ -1483,6 +1565,11 @@ begin
    End;
   Except
   End;
+  if assigned(NewDebug) then Newdebug.Close;
+  if assigned(frmdis) then frmDis.close;
+
+
+
 end;
 
 procedure TfNewBrain.About1Click(Sender: TObject);
@@ -1541,12 +1628,18 @@ begin
 end;
 
 procedure TfNewBrain.TapeManagement1Click(Sender: TObject);
+var TapeInfo:tTapeinfo;
 begin
+   if sender=acTapeManagement then
+    TapeInfo:=Cop420.Cass1.TapeInfo
+   else
+     TapeInfo:=Cop420.Cass2.TapeInfo;
+
    fTapeMgmt:= TfTapeMgmt.create(Self);
    try
     if fTapeMgmt.showmodal=MROk then
      if fTapeMgmt.Selected<>'' then
-       tapeinfo.LoadTape(fTapeMgmt.Selected);
+       TapeInfo.LoadTape(fTapeMgmt.Selected);
    Finally
     fTapeMgmt.free;
    End;
@@ -1629,8 +1722,21 @@ begin
  End;
 end;
 
+procedure TfNewBrain.SaveFormPos(frm:TForm);
+var inif:TIniFile;
+Begin
+   //save form position
+   inif:=TIniFile.create(AppPath+'NBPos.ini');
+   try
+     SaveWindowstate(inif,frm,false);
+   finally
+     inif.free;
+   end;
+end;
+
 procedure TfNewBrain.FormDestroy(Sender: TObject);
 begin
+  SaveFormPos(Self);
   timeEndPeriod(1);
 end;
 
@@ -1784,7 +1890,7 @@ end;
 
 procedure TfNewBrain.FormResize(Sender: TObject);
 begin
-  if fDrvInfo.Visible then
+  if assigned(fDrvInfo) and fDrvInfo.Visible then
    fDrvInfo.DoResize1;
 end;
 
@@ -1827,6 +1933,16 @@ begin
    OpenFile(Root+'tools\NBMapKeyb.exe')
   else
     MessageDlg('Place NBMapKeyb.exe in the tools subdir.', mtWarning, [mbOK], 0);
+end;
+
+procedure TfNewBrain.lblTape1Info2Click(Sender: TObject);
+begin
+  acTapeManagement.Execute;
+end;
+
+procedure TfNewBrain.lblTape2Info2Click(Sender: TObject);
+begin
+   acTapeManagement2.Execute;
 end;
 
 procedure TfNewBrain.Reset1Click(Sender: TObject);
