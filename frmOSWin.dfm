@@ -3,8 +3,8 @@ object fOSWin: TfOSWin
   Top = 0
   BorderStyle = bsToolWindow
   Caption = 'OS Window'
-  ClientHeight = 772
-  ClientWidth = 194
+  ClientHeight = 761
+  ClientWidth = 184
   Color = clBtnFace
   Constraints.MaxHeight = 800
   Constraints.MaxWidth = 200
@@ -17,14 +17,12 @@ object fOSWin: TfOSWin
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   ScreenSnap = True
-  PixelsPerInch = 96
   TextHeight = 13
   object GroupBox1: TGroupBox
     Left = 0
     Top = 0
-    Width = 194
+    Width = 184
     Height = 137
     Align = alTop
     Caption = 'COP Related'
@@ -185,7 +183,7 @@ object fOSWin: TfOSWin
   object GroupBox2: TGroupBox
     Left = 0
     Top = 137
-    Width = 194
+    Width = 184
     Height = 491
     Align = alTop
     Caption = 'SCREEN Related'
@@ -802,8 +800,8 @@ object fOSWin: TfOSWin
   object GroupBox3: TGroupBox
     Left = 0
     Top = 628
-    Width = 194
-    Height = 144
+    Width = 184
+    Height = 133
     Align = alClient
     Caption = 'VARIOUS Related'
     TabOrder = 2

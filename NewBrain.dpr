@@ -49,10 +49,10 @@ uses
 
 begin
   Application.Initialize;
-  Application.MainFormOnTaskbar := True;
   Application.CreateForm(TfNewBrain, fNewBrain);
   Application.CreateForm(TdmCommd, dmCommd);
   Application.Title := 'Newbrain Emulator PRO';
+  Application.MainFormOnTaskbar := False;
 //  TStyleManager.TrySetStyle('Sky');
   Application.CreateForm(TdmCommd, dmCommd);
   Application.CreateForm(TfrmProgress, frmProgress);

@@ -1,8 +1,25 @@
+{
+  Grundy NewBrain Emulator Pro Made by Despsoft
+  Copyright (c) 2004-Today , Despoinidis Chris
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+}
 unit uNBCassette;
 
 interface
 
-uses uNBTapes,classes;
+uses uNBTapes, classes;
 
 Type
 
@@ -38,7 +55,7 @@ Type
     ResetTape: Boolean;
     FileIsBinary: Boolean;
     TapeInfo: TTapeInfo;
-    wrcnt:integer;
+    wrcnt: Integer;
     function Root: string;
     procedure DoResetTape;
     procedure OpenCassette(ToRead: Boolean = false);
@@ -59,7 +76,7 @@ uses sysutils, forms, new, uNbTypes, uNBIO;
 
 constructor TNBCassette.Create;
 begin
-  TapeInfo := TTapeInfo.create;
+  TapeInfo := TTapeInfo.Create;
   Filename := 'NoName';
   DeleteNoName;
   state := csIdle;
@@ -144,7 +161,7 @@ Var
   s: String;
   i: Integer;
   Fname: string;
-  r:byte;
+  r: byte;
 Begin
 
   if pos('.', Filename) = 0 then
@@ -165,7 +182,7 @@ Begin
     for i := 1 to ln.w do
     begin
       read(cf, r);
-      s := s + char(r);//char(ReadComm); //was ReadComm
+      s := s + char(r); // char(ReadComm); //was ReadComm
     end;
   End;
   if s = '' then
@@ -175,19 +192,19 @@ Begin
     else
       s := Filename;
   end;
-  i:=pos(':',s);
-  if i>0 then
-   s:=copy(s,i+1,maxint);
+  i := pos(':', s);
+  if i > 0 then
+    s := copy(s, i + 1, maxint);
   closefile(cf);
   result := s;
 End;
 
 procedure TNBCassette.UpdateVi;
 begin
-  if TapeNo=1 then
-   fnewbrain.lblTape1Info.Caption:=Filename+CurrentExt
+  if TapeNo = 1 then
+    fnewbrain.lblTape1Info.Caption := Filename + CurrentExt
   else
-   fnewbrain.lblTape2Info.Caption:=Filename+CurrentExt;
+    fnewbrain.lblTape2Info.Caption := Filename + CurrentExt;
 end;
 
 procedure TNBCassette.SetFilename(Value: String);
@@ -210,7 +227,7 @@ begin
   if FFilename <> Value then
   begin
     FFilename := Value;
-    UpdateVI;
+    UpdateVi;
   end;
 end;
 
@@ -277,7 +294,7 @@ Begin
     else
     begin
       Rewrite(cf);
-      wrcnt:=0;
+      wrcnt := 0;
     end;
   end;
 End;

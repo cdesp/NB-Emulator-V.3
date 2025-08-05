@@ -12,10 +12,8 @@ object fsplash: Tfsplash
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   FormStyle = fsStayOnTop
-  OldCreateOrder = False
   Position = poScreenCenter
   OnHide = FormHide
-  PixelsPerInch = 96
   TextHeight = 13
   object Image1: TImage
     Left = 0

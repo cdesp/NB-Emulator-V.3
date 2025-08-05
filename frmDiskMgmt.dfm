@@ -11,11 +11,9 @@ object fDiskMgmt: TfDiskMgmt
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
-  OldCreateOrder = False
   Position = poScreenCenter
   OnCreate = FormCreate
   OnShow = FormShow
-  PixelsPerInch = 96
   TextHeight = 13
   object Panel2: TPanel
     Left = 0
@@ -110,7 +108,7 @@ object fDiskMgmt: TfDiskMgmt
     object Label1: TLabel
       Left = 1
       Top = 1
-      Width = 100
+      Width = 271
       Height = 37
       Align = alTop
       Alignment = taCenter
@@ -124,6 +122,7 @@ object fDiskMgmt: TfDiskMgmt
       ParentColor = False
       ParentFont = False
       OnClick = Label1Click
+      ExplicitWidth = 100
     end
     object lb1: TListBox
       Left = 1
@@ -149,7 +148,7 @@ object fDiskMgmt: TfDiskMgmt
     object Label2: TLabel
       Left = 1
       Top = 1
-      Width = 99
+      Width = 271
       Height = 37
       Align = alTop
       Alignment = taCenter
@@ -163,6 +162,7 @@ object fDiskMgmt: TfDiskMgmt
       ParentColor = False
       ParentFont = False
       OnClick = Label2Click
+      ExplicitWidth = 99
     end
     object lb2: TListBox
       Left = 1

@@ -12,10 +12,8 @@ object fTapeMgmt: TfTapeMgmt
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
-  OldCreateOrder = False
   OnDestroy = FormDestroy
   OnShow = FormShow
-  PixelsPerInch = 96
   TextHeight = 13
   object Panel1: TPanel
     Left = 0
@@ -57,7 +55,6 @@ object fTapeMgmt: TfTapeMgmt
     Height = 41
     Align = alBottom
     TabOrder = 1
-    ExplicitWidth = 242
     object Label4: TLabel
       Left = 352
       Top = 1
@@ -106,7 +103,6 @@ object fTapeMgmt: TfTapeMgmt
     Height = 401
     Align = alClient
     TabOrder = 2
-    ExplicitWidth = 1
     object Label2: TLabel
       Left = 56
       Top = 8

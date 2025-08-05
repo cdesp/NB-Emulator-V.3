@@ -1,33 +1,20 @@
 {
-Grundy NewBrain Emulator Pro Made by Despsoft
+  Grundy NewBrain Emulator Pro Made by Despsoft
+  Copyright (c) 2004-Today , Despoinidis Chris
 
-Copyright (c) 2004, Despoinidis Chris
-All rights reserved.
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-1. Redistributions of source code must retain the above copyright notice,
-this list of conditions and the following disclaimer.
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-2. Redistributions in binary form must reproduce the above copyright notice,
-this list of conditions and the following disclaimer in the documentation and/or
-other materials provided with the distribution.
-
-3. Neither the name of the copyright holder nor the names of its contributors
-may be used to endorse or promote products derived from this software without
-specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY
-DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON A
-NY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 }
 unit frmTapeMgmt;
 
@@ -74,7 +61,7 @@ type
     procedure Button1Click(Sender: TObject);
     procedure ListBox1DblClick(Sender: TObject);
   private
-TpFiles: TStringList;
+    TpFiles: TStringList;
     procedure GetDirFiles;
     procedure GetTapeFiles;
     { Private declarations }
@@ -87,54 +74,61 @@ TpFiles: TStringList;
 var
   fTapeMgmt: TfTapeMgmt;
 {$R *.DFM}
+
 implementation
+
 uses new;
 
 procedure TfTapeMgmt.GetTapes;
-Var sl:TStringlist;
+Var
+  sl: TStringList;
 begin
-  sl:=TStringlist(getfiles('\basic\*.*',true));
-  listbox1.Items.Assign(sl);
+  sl := TStringList(getfiles('\basic\*.*', true));
+  ListBox1.Items.Assign(sl);
   sl.free;
 end;
 
 procedure TfTapeMgmt.GetDirFiles;
-Var sl:TStringlist;
-    s:String;
-    i:Integer;
+Var
+  sl: TStringList;
+  s: String;
+  i: Integer;
 begin
-  if listbox1.itemindex=-1 then exit;
+  if ListBox1.itemindex = -1 then
+    exit;
 
-  s:=listbox1.items[listbox1.itemindex];
-  sl:=TStringlist(getfiles('\basic\'+s+'\*.*',False));
+  s := ListBox1.Items[ListBox1.itemindex];
+  sl := TStringList(getfiles('\basic\' + s + '\*.*', False));
   GetTapeFiles;
-  listbox3.items.Clear;
-  For i:=0 to sl.count-1 do
+  ListBox3.Items.Clear;
+  For i := 0 to sl.count - 1 do
   Begin
-    if tpfiles.IndexOf(sl[i])=-1 then
-     listbox3.items.add(sl[i]);
+    if TpFiles.IndexOf(sl[i]) = -1 then
+      ListBox3.Items.add(sl[i]);
   End;
-//  listbox3.Items.Assign(sl);
+  // listbox3.Items.Assign(sl);
   sl.free;
 end;
 
 procedure TfTapeMgmt.GetTapeFiles;
-Var s,pth:String;
+Var
+  s, pth: String;
 Begin
-  pth:=ExtractFilepath(application.exename);
-  if listbox1.itemindex=-1 then exit;
-  s:=listbox1.items[listbox1.itemindex];
-  if fileexists(pth+'\basic\'+s+'\_dir.txt') then
-    tpfiles.loadfromfile(pth+'\basic\'+s+'\_dir.txt')
+  pth := ExtractFilepath(application.exename);
+  if ListBox1.itemindex = -1 then
+    exit;
+  s := ListBox1.Items[ListBox1.itemindex];
+  if fileexists(pth + '\basic\' + s + '\_dir.txt') then
+    TpFiles.loadfromfile(pth + '\basic\' + s + '\_dir.txt')
   Else
-   tpfiles.clear;
-  Listbox2.items.assign(tpfiles);
+    TpFiles.Clear;
+  ListBox2.Items.Assign(TpFiles);
 End;
 
 procedure TfTapeMgmt.FormShow(Sender: TObject);
 begin
-  TpFiles:= TStringList.create;
-  gettapes;
+  TpFiles := TStringList.create;
+  GetTapes;
 end;
 
 procedure TfTapeMgmt.ListBox1Click(Sender: TObject);
@@ -154,91 +148,101 @@ end;
 
 procedure TfTapeMgmt.Button6Click(Sender: TObject);
 begin
-  if listbox3.ItemIndex=-1 then exit;
-  listbox2.Items.add(Listbox3.items[listbox3.ItemIndex]);
-  Listbox3.Items.Delete(listbox3.ItemIndex);
-  tpfiles.Assign(listbox2.items);
+  if ListBox3.itemindex = -1 then
+    exit;
+  ListBox2.Items.add(ListBox3.Items[ListBox3.itemindex]);
+  ListBox3.Items.Delete(ListBox3.itemindex);
+  TpFiles.Assign(ListBox2.Items);
 end;
 
 procedure TfTapeMgmt.Button7Click(Sender: TObject);
 begin
-  if listbox2.ItemIndex=-1 then exit;
-  listbox3.Items.add(Listbox2.items[listbox2.ItemIndex]);
-  Listbox2.Items.Delete(listbox2.ItemIndex);
-  tpfiles.Assign(listbox2.items);
+  if ListBox2.itemindex = -1 then
+    exit;
+  ListBox3.Items.add(ListBox2.Items[ListBox2.itemindex]);
+  ListBox2.Items.Delete(ListBox2.itemindex);
+  TpFiles.Assign(ListBox2.Items);
 end;
 
 procedure TfTapeMgmt.Button3Click(Sender: TObject);
 begin
-  if listbox2.ItemIndex=-1 then exit;
-  if listbox2.ItemIndex<1 then exit;
-  Listbox2.Items.Exchange(listbox2.ItemIndex,listbox2.ItemIndex-1);
-  tpfiles.Assign(listbox2.items);
+  if ListBox2.itemindex = -1 then
+    exit;
+  if ListBox2.itemindex < 1 then
+    exit;
+  ListBox2.Items.Exchange(ListBox2.itemindex, ListBox2.itemindex - 1);
+  TpFiles.Assign(ListBox2.Items);
 end;
 
 procedure TfTapeMgmt.Button4Click(Sender: TObject);
 begin
-  if listbox2.ItemIndex=-1 then exit;
-  if listbox2.ItemIndex>Listbox2.items.count-2 then exit;
-  Listbox2.Items.Exchange(listbox2.ItemIndex,listbox2.ItemIndex+1);
-  tpfiles.Assign(listbox2.items);
+  if ListBox2.itemindex = -1 then
+    exit;
+  if ListBox2.itemindex > ListBox2.Items.count - 2 then
+    exit;
+  ListBox2.Items.Exchange(ListBox2.itemindex, ListBox2.itemindex + 1);
+  TpFiles.Assign(ListBox2.Items);
 end;
 
 procedure TfTapeMgmt.Button5Click(Sender: TObject);
-Var s,pth:String;
+Var
+  s, pth: String;
 Begin
-  pth:=ExtractFilepath(application.exename);
-  if listbox1.itemindex=-1 then exit;
-  s:=listbox1.items[listbox1.itemindex];
-  tpfiles.SaveToFile(pth+'\basic\'+s+'\_dir.txt');
+  pth := ExtractFilepath(application.exename);
+  if ListBox1.itemindex = -1 then
+    exit;
+  s := ListBox1.Items[ListBox1.itemindex];
+  TpFiles.SaveToFile(pth + '\basic\' + s + '\_dir.txt');
 end;
 
 procedure TfTapeMgmt.Button8Click(Sender: TObject);
-Var i:Integer;
+Var
+  i: Integer;
 begin
- For i:=listbox3.items.count-1 downto 0 do
- Begin
-  listbox2.Items.add(Listbox3.items[i]);
-  Listbox3.Items.Delete(i);
- End;
- tpfiles.Assign(listbox2.items);
+  For i := ListBox3.Items.count - 1 downto 0 do
+  Begin
+    ListBox2.Items.add(ListBox3.Items[i]);
+    ListBox3.Items.Delete(i);
+  End;
+  TpFiles.Assign(ListBox2.Items);
 
 end;
 
 procedure TfTapeMgmt.Button9Click(Sender: TObject);
-Var i:Integer;
+Var
+  i: Integer;
 begin
- For i:=listbox2.items.count-1 downto 0 do
- Begin
-  listbox3.Items.add(Listbox2.items[i]);
-  Listbox2.Items.Delete(i);
- End;
- tpfiles.Assign(listbox2.items);
+  For i := ListBox2.Items.count - 1 downto 0 do
+  Begin
+    ListBox3.Items.add(ListBox2.Items[i]);
+    ListBox2.Items.Delete(i);
+  End;
+  TpFiles.Assign(ListBox2.Items);
 end;
 
 procedure TfTapeMgmt.Button10Click(Sender: TObject);
 begin
-  if width>800 then
-   width:=249
+  if width > 800 then
+    width := fnewbrain.ScrNormalize(257)
   else
-   width:=807;
+    width := fnewbrain.ScrNormalize(810);
 end;
 
 procedure TfTapeMgmt.Button1Click(Sender: TObject);
 begin
-  if listbox1.ItemIndex=-1 then
-   Selected:=''
+  if ListBox1.itemindex = -1 then
+    Selected := ''
   else
-   Selected:=listbox1.items[listbox1.ItemIndex];
+    Selected := ListBox1.Items[ListBox1.itemindex];
 end;
 
 procedure TfTapeMgmt.ListBox1DblClick(Sender: TObject);
 begin
-   if listbox1.ItemIndex<>-1 then
-   Begin
+  if ListBox1.itemindex <> -1 then
+  Begin
     Button1Click(nil);
-    Modalresult:=Mrok;
-   End; 
+    Modalresult := Mrok;
+  End;
 end;
 
 end.

@@ -6,7 +6,7 @@ object fCPUWin: TfCPUWin
   BorderStyle = bsToolWindow
   Caption = 'CPU Window'
   ClientHeight = 462
-  ClientWidth = 194
+  ClientWidth = 184
   Color = clBtnFace
   Constraints.MaxHeight = 600
   Constraints.MaxWidth = 200
@@ -19,12 +19,10 @@ object fCPUWin: TfCPUWin
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   Position = poDesigned
   ScreenSnap = True
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
-  PixelsPerInch = 96
   TextHeight = 13
   object FlagBox: TGroupBox
     Left = 8
