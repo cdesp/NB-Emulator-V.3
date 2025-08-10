@@ -306,7 +306,7 @@ var
 
 implementation
 uses unbMemory,ustrings,uDisAsm,math,Printers,uAsm,uNBTypes, New, frmCPUWin,
-  frmOSWin,uAsmPrj, frmNewDebug;
+  frmOSWin,uAsmPrj, frmNewDebug, uNBIO;
 
 {$R *.dfm}
 
@@ -2140,6 +2140,7 @@ begin
  end;
  //What About Rom ??
  RomWriteable:=true;
+ nbio.RomWriteAble:=RomWriteable;
  fnewbrain.Suspendemul;
  try
  TotBytes:=0;
@@ -2159,6 +2160,7 @@ begin
     end;
 
  end;
+  nbio.RomWriteAble:=NOT RomWriteable;
  Showmessage(inttostr(totbytes)+' bytes put in memory!!!');
  finally
    fnewbrain.ResumeEmul;

@@ -728,6 +728,7 @@ begin
 end;
 
 procedure TfNewBrain.Start1Click(Sender: TObject);
+Var ver:Integer;
 begin
   // Set Title
   if Start1.Tag = 0 then
@@ -780,7 +781,25 @@ begin
     nbmem.init
   else
     WriteP1('Ram/Rom Setup from .ini');
-  // todo:print to info panel the loaded rom version
+  // done:print to info panel the loaded rom version
+  {
+  byte at A700H=42752
+
+	07EH(126)		O.S. 1.4
+	0B6H(182)		O.S. 1.9
+	0DDH(221)		O.S. 1.91
+	076H(118)		O.S. FRENCH
+	0FEH(254)		O.S. 2.0
+  }
+  ver:= nbmem.GetRom($A700);//AB rom version
+  case ver of
+    126:begin vers:=1;svers:=4; end;
+    182:begin vers:=1;svers:=9; end;
+    221:begin vers:=1;svers:=91; end;
+    118:begin vers:=1;svers:=92; end;//FRENCH
+    254:begin vers:=2;svers:=0; end;
+  end;
+  RefreshRomVer;
 
   { For j:=0 to $1fff do
     nbmem.Rom[j]:=nbmem.rom[$e000+j]; }

@@ -96,6 +96,7 @@ begin
      4:Result:=2;
      5:Result:=2;
      6:Result:=2;
+     7:Result:=2;
   end;
 end;
 
@@ -110,6 +111,7 @@ begin
      4:Result:=00;
      5:Result:=01;
      6:Result:=02;
+     7:Result:=03;
   end;
 end;
 

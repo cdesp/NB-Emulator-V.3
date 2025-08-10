@@ -214,7 +214,7 @@ function TCop420.GetFromCop: byte;
 {$IFDEF NBDEBUG}
     ODS('*********GETDATA**********');
 {$ENDIF}
-    if Cassette.Loading then
+    if (Cassette <> nil) and Cassette.Loading then
     begin
       filegetbyte;
       NextCopInIsData := false;

@@ -50,6 +50,7 @@ Type
      procedure LoadRom(FromPageNo: Byte; FName: String; NextForward: Boolean = True);
      procedure SetPageInSlot(Slot,Page:integer;Alt:Boolean);
      function GetDirectMem(Const Page,Addr:Integer): Byte;
+     procedure SetDirectMem(const Page, Addr: Integer; Value: Byte);
      procedure CreatePage(PageNo:Integer);
      procedure DestroyPage(PageNo:Integer);
      constructor Create;
@@ -90,7 +91,7 @@ Var
 
 
 implementation
-uses Sysutils,forms,new,Inifiles,uNbTypes,frmPeriferals,dialogs,z80baseclass;
+uses Sysutils,forms,new,Inifiles,uNbTypes,frmPeriferals,dialogs,z80baseclass,uNBIO;
 
 constructor TNBMemory.Create;
 begin
@@ -144,6 +145,13 @@ begin
  NBPages[PageNo]:=nil;
  Dispose(n);
 end;
+
+procedure TNBMemory.SetDirectMem(Const Page,Addr:Integer;Value:Byte);
+begin
+ if ChipExists(Page) And (Length(NBPages[Page].Memory)>Addr) then
+   NBPages[Page].Memory[Addr]:=Value;
+end;
+
 
 function TNBMemory.GetDirectMem(Const Page,Addr:Integer): Byte;
 begin
@@ -274,6 +282,16 @@ begin
        LoadRom(121,'EMU_CDROM.rom');
        LoadRom(120,'EMU_EFROM.rom'); //Series 2 ROM
       end;
+    3:
+      Begin
+       LoadRom(123,'MOD_80ROM.rom'); //Modular newbrain Rom
+       LoadRom(122,'MOD_ABROM.rom'); //Modular newbrain Rom
+       LoadRom(121,'MOD_CDROM.rom');
+       LoadRom(120,'MOD_EFROM.rom'); //Series 2 ROM
+       SetPageInSlot(4,123,False); //A000   rom
+       //uses page 96 and 97 of ram for 16KB Video RAM
+      end;
+
     end;
   end;
 
@@ -296,7 +314,7 @@ begin
   CreatePage(117);
   SetPageInSlot(4,117,False); //8000   ram/rom
   }
-  LoadRom(123,'ZRT20AB.rom');
+ // LoadRom(123,'ZRT20AB.rom');
 
   //TODO:Load from frmperiferals
 
@@ -560,7 +578,7 @@ begin
        Exit;
      End;
 
-     if (not p^.IsRom) then
+     if (not p^.IsRom) or nbio.RomWriteAble then
      Begin
       p^.Memory[offs]:=Value;
      End

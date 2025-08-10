@@ -27,7 +27,7 @@ object frmdis: Tfrmdis
     Top = 0
     Width = 959
     Height = 763
-    ActivePage = TSDis
+    ActivePage = TSAsm
     Align = alClient
     TabOrder = 0
     object TSDis: TTabSheet
