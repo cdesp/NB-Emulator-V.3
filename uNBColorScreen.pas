@@ -84,14 +84,22 @@ end;
 
 function TNBColorScreen.GetScrBColor: TColor;
 begin
+<<<<<<< HEAD
   if FBackColor<length(NBCS_ColorIDX) then
+=======
+  if FBackColor<16 then
+>>>>>>> be93c2ef3e2fdf9d435e8c5dc3115fba7d1b2f17
    Result:= NBCS_ColorIDX[FBackColor];
 end;
 
 
 function TNBColorScreen.GetScrFColor: TColor;
 begin
+<<<<<<< HEAD
   if FForeColor<length(NBCS_ColorIDX) then
+=======
+  if FForeColor<16 then
+>>>>>>> be93c2ef3e2fdf9d435e8c5dc3115fba7d1b2f17
    Result:= NBCS_ColorIDX[FForeColor];
 end;
 
