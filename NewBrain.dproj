@@ -5,7 +5,7 @@
         <FrameworkType>VCL</FrameworkType>
         <MainSource>NewBrain.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
+        <Config Condition="'$(Config)'==''">Debug</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>1</TargetedPlatforms>
         <AppType>Application</AppType>
@@ -185,7 +185,6 @@
         <DCCReference Include="uNBCop.pas"/>
         <DCCReference Include="uNBCPM.pas"/>
         <DCCReference Include="uNBIO.pas"/>
-        <DCCReference Include="uNBKeyboard.pas"/>
         <DCCReference Include="uNBKeyboard2.pas"/>
         <DCCReference Include="uNBMemory.pas"/>
         <DCCReference Include="uNBParser.pas"/>
@@ -217,6 +216,7 @@
             <Form>$R *.res</Form>
         </DCCReference>
         <DCCReference Include="uNBCassette.pas"/>
+        <DCCReference Include="uNBColorScreen.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

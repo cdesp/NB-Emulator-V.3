@@ -63,12 +63,27 @@ uses shellapi, New,IdSSLOpenSSLHeaders;
 
 {$R *.dfm}
 
+CONST InetFile1='ssleay32.dll';
+      InetFile2='libeay32.dll';
+
 
 procedure TfrmUpdate.ConnectToSite;
 Var s:String[40];
    ms:TStringStream;
    c:integer;
 Begin
+  if not fileexists(ExtractFilePath(Application.exename)+InetFile1) then
+  begin
+     Showmessage('Update system not working.'#10#13+InetFile1+' and '+InetFile2+' are needed libraries.'#10#13+InetFile1+' is missing!!.');
+     exit;
+  end;
+  if not fileexists(ExtractFilePath(Application.exename)+InetFile2) then
+  begin
+     Showmessage('Update system not working.'#10#13+InetFile1+' and '+InetFile2+' are needed libraries.'#10#13+InetFile2+' is missing!!.');
+     exit;
+  end;
+
+
   newupdate:=false;
   listbox1.Clear;
   s:='';

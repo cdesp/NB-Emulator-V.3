@@ -26,7 +26,6 @@ uses
   uNBCop in 'uNBCop.pas',
   uNBCPM in 'uNBCPM.pas',
   uNBIO in 'uNBIO.pas',
-  uNBKeyboard in 'uNBKeyboard.pas',
   uNBKeyboard2 in 'uNBKeyboard2.pas',
   uNBMemory in 'uNBMemory.pas',
   uNBParser in 'uNBParser.pas',
@@ -41,9 +40,9 @@ uses
   uUpdate in 'uUpdate.pas' {frmUpdate},
   uz80dsm in 'uz80dsm.pas' {frmDisasm},
   Z80Intf in 'Z80Intf.pas',
-
   Z80BaseClass in 'Z80Package\Z80BaseClass.pas' {$R *.res},
-  uNBCassette in 'uNBCassette.pas';
+  uNBCassette in 'uNBCassette.pas',
+  uNBColorScreen in 'uNBColorScreen.pas';
 
 {$R *.res}
 

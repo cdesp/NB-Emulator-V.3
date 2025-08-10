@@ -20,7 +20,7 @@ unit uNBScreen;
 
 interface
 
-Uses uNBTypes, DXDraws, uNBStream, graphics, classes, DIB;
+Uses uNBTypes, DXDraws, uNBStream, graphics, classes, DIB, uNBColorScreen;
 
 Const
   ScreenYOffset = 2;
@@ -49,6 +49,8 @@ Type
     VirtImgC: TDxdib;
     VirtImg: TDIB;
     ScaledImg: TDIB;
+    FForeColor: byte;
+    FBackColor: byte;
     function GetNextByte(var p, Offset: integer): Byte;
     function GetDEP: Byte;
     function GetEL: Byte;
@@ -108,7 +110,7 @@ Type
     procedure Clearscr;
     procedure paintGraph(ISDev33: Boolean = false);
     function PaintVideo: Boolean;
-    procedure PaintLetter(Const cx, cy: integer; Ch: Byte;
+    procedure PaintLetter(Const cx, cy: integer; Ch: Byte; VidAddr:word;
       const dopaint: Boolean = false);
     procedure PaintLeds(txt: String);
     procedure PaintDebug;
@@ -136,6 +138,9 @@ Type
     property VideoBase: TPair read GetVideoBase;
     property VIDEOTOP: TPair read GetVIDEOTOP;
     property TV0: Byte read GetTV0;
+    //MODNB
+    property ForeColor: byte read FForeColor write FForeColor;
+    property BackColor: byte read FBackColor write FBackColor;
   End;
 
 procedure LoadCharSet(fname: string);
@@ -187,6 +192,8 @@ begin
   ScaledImg.Width := 640;
   ScaledImg.Height := 500;
   ScaledImg.BitCount := 24;
+  if assigned(NBColScr) then
+   freeandnil(NBColScr);
 end;
 
 Procedure TNBScreen.SetVirtualImage;
@@ -780,7 +787,7 @@ begin
 end;
 
 // Paint a letter(ch) on screen at position cx,cy
-procedure TNBScreen.PaintLetter(Const cx, cy: integer; Ch: Byte;
+procedure TNBScreen.PaintLetter(Const cx, cy: integer; Ch: Byte; VidAddr:word;
   const dopaint: Boolean = false);
 Var
   x, y: integer;
@@ -904,17 +911,27 @@ Var
     nx, ny: integer;
     i, j: integer;
   Begin
-    if DoSet then
-      clr := WhiteColor
+    if assigned(NBColScr) then
+    begin
+      if DoSet then
+        clr := NBColScr.getAddrForeColor(VidAddr)
+      else
+        clr := NBColScr.getAddrBackColor(VidAddr);
+    end
     else
-      clr := BlackColor;
+    begin
+      if DoSet then
+        clr := WhiteColor
+      else
+        clr := BlackColor;
+    end;
     VirtImg.Pixels[x, y] := clr;
     exit;
-    nx := ScreenXOffset + x * horzmult;
+  {  nx := ScreenXOffset + x * horzmult;
     ny := ScreenYOffset + y * vertmult;
     for i := 0 to horzmult - 1 do
       for j := 0 to vertmult - 1 do
-        Newscr.Surface.Pixel[nx + i, ny + j] := clr;
+        Newscr.Surface.Pixel[nx + i, ny + j] := clr;}
     // frame.plot(nx+i,EMUSCRHeight-(ny+j),clr);
   End;
 
@@ -1111,6 +1128,7 @@ var
   nStart: integer;
   wid: integer;
   Canv: TCanvas;
+  EOL:boolean;
 begin
   result := false;
   Printedlines := 0;
@@ -1170,11 +1188,17 @@ begin
     if testbit(TVModeReg, 0) then
     begin
       // newscr.Surface.Fill(WhiteColor);
-      VirtImg.Fill(WhiteColor);
+      //if assigned(NBColScr) then
+      //  VirtImg.Fill(NBColScr.ScrFColor)
+      //else
+        VirtImg.Fill(WhiteColor);
     end
     Else
     begin
       // newscr.Surface.Fill(blackColor);
+     //if assigned(NBColScr) then
+      //  VirtImg.Fill(NBColScr.ScrBColor)
+      //else
       VirtImg.Fill(BlackColor);
     end;
 
@@ -1208,6 +1232,7 @@ begin
         s := '';
         if (y * lengy) > 249 then
           break; // 240+10=250
+        EOL:=false;
         For x := 0 to EL - 1 do
         Begin
           if x > LL - 1 then
@@ -1228,7 +1253,7 @@ begin
             v2 := nbmem.rom[nender + 1];
             v3 := nbmem.rom[nender + 2];
             v4 := nbmem.rom[nender + 3];
-            inc(nender); // for page mode compatibility
+           // inc(nender); // for page mode compatibility
           End;
 
           nValue := v1;
@@ -1241,10 +1266,12 @@ begin
           End;
           // test end of line
           if (v1 = $0) then
-            break;
+            EOL:=true;
+          if EOL then
+            nValue:=$20;//break;
           if nender > $FFFF then
             continue;
-          PaintLetter(x, y, nValue);
+          PaintLetter(x, y, nValue, nender); //change for new Screen color
         End;
         if brked then
           break;

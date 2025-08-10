@@ -37,6 +37,7 @@ Type
        Pressed:Array[0..5] of smallint;
        NBkeyList:TStringlist;
      public
+       OrigKey:String;
        function TranslateChar(c:Char): Boolean;
        procedure PCKeyDown(var Key: Word; Shift: TShiftState);
        procedure PCKeyUp(var Key: Word; Shift: TShiftState);
@@ -304,14 +305,109 @@ Begin
   A[1,90]:=NB_Z or $40;
 End;
 
+function GetCharWithShiftPressed(ch: Char): string;
+var
+  key: ShortInt;
+  vk: Byte;
+  shiftState: Byte;
+  scanCode: UINT;
+  keyboardState: TKeyboardState;
+  buf: array[0..255] of WideChar;
+  resultLen: Integer;
+begin
+  // Get the virtual key for this char
+  key := VkKeyScan(ch);
+
+  // Low byte = virtual key code
+  vk := key and $FF;
+
+  // High byte = shift state (bit 0 = Shift, bit 1 = Ctrl, bit 2 = Alt)
+  shiftState := (key shr 8) and $FF;
+
+  // Fill keyboard state with zeros
+  FillChar(keyboardState, SizeOf(keyboardState), 0);
+
+  // Force Shift key pressed
+  keyboardState[VK_SHIFT] := $80; // high bit set means key is pressed
+
+  // Get scan code from virtual key
+  scanCode := MapVirtualKey(vk, 0);
+
+  // Call ToUnicode
+  FillChar(buf, SizeOf(buf), 0);
+  resultLen := ToUnicode(vk, scanCode, keyboardState, buf, Length(buf), 0);
+
+  case resultLen of
+    0:    Result := '0';//'No key';
+    -1:   Result := '0';//'Dead key';
+  else
+    SetString(Result, buf, resultLen);
+  end;
+end;
+
 Procedure CheckKeyBoard;
 var
   t,tt:byte;
+
+  //needed for modular Newbrain that uses a PS/2 keyboard
+  function getrealkey(k:string):Integer;
+  var s:string;
+
+    procedure sanitize;
+    begin
+      case result of
+          37: result:= ord(#4);  //<
+          38: result:= ord(#11);  //^
+          39: result:= ord(#3);  //>
+          40: result:= ord(#10);  //KT
+         186: result:= ord(';');
+         187: result:= ord('=');
+         188: result:= ord(',');
+         189: result:= ord('-');
+         190: result:= ord('.');
+         191: result:= ord('/');
+         219: result:= ord('[');
+         221: result:= ord(']');
+         222: result:= ord('''');
+
+      end;
+    end;
+
+  begin
+   result:=0;
+   t:=pos('#',k);
+   if t>0 then
+   begin
+     s:=copy(k,t+1,maxint);
+     try
+       result:=strtoint(s);
+       Sanitize;
+       if pos('SHFT',k)>0 then
+        result:=ord(GetCharWithShiftPressed(chr(result))[1])
+       else
+        if (result>64) and (result<91) then
+         result:=result+  97-65;
+
+     except
+        Result:=0;
+     end;
+   end
+   else //check special keys
+   Begin
+     if sametext(k,'ENTER') then result:=13;
+     if sametext(k,'BREAK') then result:=0;
+
+
+   End;
+
+  end;
+
 begin
   if nbio.KeyPressed<>$80 then
    exit;
 
   //New routine
+
 
   nbKey:=nbKeyboard.NBGetKey;
   if nbKey<>$80 then
@@ -332,6 +428,7 @@ begin
      NBKey:=25;//VD
     End;
     nbio.KeyPressed:=NbKey;
+    nbio.RealKeyPressed := getRealKey(nbKeyboard.OrigKey);
     nbio.kbint:=true;
 
   End;
@@ -607,6 +704,7 @@ Begin
 
  If nbkeyid=-1 then exit;
 
+ OrigKey:=Org;
  Result:=NBKEYs[nbkeyid];
 
  if nbshifted then

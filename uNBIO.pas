@@ -92,6 +92,15 @@ type
     procedure DoPort33Out(Value: Byte);
     function DoPort44In(Value: Byte): Byte;
     procedure DoPort44Out(Value: Byte);
+    function DoPort128In(Value: Byte): Byte;
+    function DoPort37In(Value: Byte): Byte;
+    function DoPort32In(Value: Byte): Byte;
+    procedure DoPort224Out(Value: Byte);
+    procedure DoPort64Out(Value: Byte);
+    procedure DoPort65Out(Value: Byte);
+    procedure DoPort66Out(Value: Byte);
+
+
 
   public
     KBStatus: TKeybState; // if true we send the data key
@@ -102,11 +111,13 @@ type
     DoClock: Boolean;
     kbint: Boolean;
     KeyPressed: Byte;
+    RealKeyPressed: Byte;
     brkpressed: Boolean;
     DAC5: Integer;
     EnableReg: Byte;
     EnableReg2: Byte;
     LatchedParOut3: Byte;
+    RomWriteAble:Boolean;
     Procedure NBout(Port: Byte; Value: Byte);
     Function NBIn(Port: Byte): Byte;
     constructor Create;
@@ -125,7 +136,7 @@ Var
 implementation
 
 uses uNBMemory, uNBScreen, new, sysutils, jclLogic, z80baseclass, uNBCop,
-  windows, uNBCPM, unbtypes;
+  windows, uNBCPM, unbtypes,uNBColorScreen;
 
 constructor TNBInOutSupport.Create;
 begin
@@ -139,6 +150,7 @@ begin
   lstick := 0;
   MDloading := false;
   MDsaving := false;
+  RomWriteAble:=false;//for Modular
 end;
 
 procedure TNBInOutSupport.DoPort1Out(Value: Byte);
@@ -857,6 +869,7 @@ End;
 procedure TNBInOutSupport.DoPort8Out(Value: Byte);
 Begin
   nbscreen.VIDEOMSB := 1;
+  nbscreen.VideoAddrReg := SETBIT(nbscreen.VideoAddrReg,6);
 End;
 
 function TNBInOutSupport.DoPort9In(Value: Byte): Byte;
@@ -919,17 +932,9 @@ End;
 // Testing for NB Laptop
 var
   dirsending: Boolean = false;
-
-var
   dirlist: TStringlist = nil;
-
-var
   dirlin, dirch: Integer;
-
-var
   dirret: Integer = 255;
-
-var
   selectedfile: string;
 
 function TNBInOutSupport.DoPort33In(Value: Byte): Byte; // MY DEV DRIVER
@@ -1030,6 +1035,83 @@ Begin
     selectedfile := selectedfile + char(Value);
 End;
 
+
+//--Modular Newbrain
+function TNBInOutSupport.DoPort32In(Value: Byte): Byte;
+begin
+   Result:=0;
+   if kbint then
+    begin
+      kbint := false;
+//      Result := keypressed;
+      Result := RealKeyPressed;
+      keypressed := $80;
+    end;
+end;
+
+function TNBInOutSupport.DoPort37In(Value: Byte): Byte;
+begin
+  Result:=0;
+  if nbmem.rom[$5D]+nbmem.rom[$5C]=0 then //ram is 0
+  begin
+   nbmem.rom[$5D]:=$2;
+   nbmem.rom[$5C]:=$68;
+  end;
+
+  if kbint then
+  begin
+    Result:=Setbit(Result,0); //if keyboard has data
+    Result:=Setbit(Result,5); //if keyboard has data
+  end;
+end;
+
+
+function TNBInOutSupport.DoPort128In(Value: Byte): Byte;
+begin
+  Result:= 4;
+end;
+
+procedure TNBInOutSupport.DoPort224Out(Value: Byte); // Enable Write to ROM
+Begin
+   //11b   DISABLE INTS & DISABLE NB=RAM WRITABLE
+   RomWriteAble := TestBit(Value,0);
+end;
+
+//MODNB set color fore and back
+procedure TNBInOutSupport.DoPort64Out(Value: Byte);
+Begin
+  if not assigned(nbcolscr) then
+     NBColScr:=TNBColorScreen.create;
+
+  NBColScr.ForeColor:=Value shr 4;
+  NBColScr.BackColor:=Value and $0f;
+end;
+
+//Set at x,y fore color x=Reg B, Y=A
+//for text here B=hi byte and A=low byte of address
+procedure TNBInOutSupport.DoPort65Out(Value: Byte);
+var txtAddr:word;
+    t:word;
+Begin
+  if not assigned(nbcolscr) then
+     NBColScr:=TNBColorScreen.create;
+  t:=z80_get_reg(Z80_REG_BC);
+  txtAddr:=(t and $fF00) or value;
+  NBColScr.setTextAddr(txtAddr);
+end;
+
+//Set at x,y back color x=Reg B, Y=A
+procedure TNBInOutSupport.DoPort66Out(Value: Byte);
+Begin
+  if not assigned(nbcolscr) then
+     NBColScr:=TNBColorScreen.create;
+
+end;
+
+
+//-------------------------------
+
+
 function TNBInOutSupport.GetClock: LongWord;
 begin
   Result := GetTickCount;
@@ -1069,10 +1151,16 @@ begin
       Result := DoPort24In(Port);
     25:
       Result := DoPort25In(Port);
+    32:
+      Result := DoPort32In(Port);
     33:
       Result := DoPort33In(Port);
+    37:
+      Result := DoPort37In(Port);       //Modular RS232  use it for keyboard
     44:
       Result := DoPort44In(Port);
+    128:
+      Result := DoPort128In(Port);       //Modular CPU SPEED
     204:
       Result := DoPort204In(Port);
     205:
@@ -1120,6 +1208,12 @@ begin
       DoPort33Out(Value); // MY TEST DRIVER
     44:
       DoPort44Out(Value); // select files and dir
+    64:
+      DoPort64Out(Value); // MODNB set color fore and back
+    65:
+      DoPort65Out(Value); // Set at x,y fore color x=Reg B, Y=A
+    66:
+      DoPort66Out(Value); // Set at x,y Back color x=Reg B, Y=A
     128:
       DoPort128Out(Value);
     204:
@@ -1130,6 +1224,8 @@ begin
       DoPort206Out(Value);
     207:
       DoPort207Out(Value);
+    224:
+      DoPort224Out(Value); //Modular newbrain Enb write to rom
     255:
       DoPort255Out(Value); // Paging
   Else
