@@ -99,6 +99,10 @@ type
     procedure DoPort64Out(Value: Byte);
     procedure DoPort65Out(Value: Byte);
     procedure DoPort66Out(Value: Byte);
+    function DoPort48In(Value: Byte): Byte;
+    function DoPort49In(Value: Byte): Byte;
+    procedure DoPort48Out(Value: Byte);
+    procedure DoPort49Out(Value: Byte);
 
 
 
@@ -1062,7 +1066,9 @@ begin
   begin
     Result:=Setbit(Result,0); //if keyboard has data
     Result:=Setbit(Result,5); //if keyboard has data
-  end;
+  end
+  else
+   Result:=Setbit(Result,5);
 end;
 
 
@@ -1076,6 +1082,8 @@ Begin
    //11b   DISABLE INTS & DISABLE NB=RAM WRITABLE
    RomWriteAble := TestBit(Value,0);
 end;
+
+//color screen device
 
 //MODNB set color fore and back
 procedure TNBInOutSupport.DoPort64Out(Value: Byte);
@@ -1092,12 +1100,17 @@ end;
 procedure TNBInOutSupport.DoPort65Out(Value: Byte);
 var txtAddr:word;
     t:word;
+
+
 Begin
   if not assigned(nbcolscr) then
      NBColScr:=TNBColorScreen.create;
   t:=z80_get_reg(Z80_REG_BC);
   txtAddr:=(t and $fF00) or value;
-  NBColScr.setTextAddr(txtAddr);
+  if txtAddr=$FFFF then
+    NBColScr.doScrollUp          //hardware scroll up the screeen
+  else
+   NBColScr.setTextAddr(txtAddr);
 end;
 
 //Set at x,y back color x=Reg B, Y=A
@@ -1159,6 +1172,10 @@ begin
       Result := DoPort37In(Port);       //Modular RS232  use it for keyboard
     44:
       Result := DoPort44In(Port);
+    48:
+      Result := DoPort48In(Port);
+    49:
+      Result := DoPort49In(Port);
     128:
       Result := DoPort128In(Port);       //Modular CPU SPEED
     204:
@@ -1208,6 +1225,10 @@ begin
       DoPort33Out(Value); // MY TEST DRIVER
     44:
       DoPort44Out(Value); // select files and dir
+    48:
+      DoPort48Out(Value); // my Storage dev
+    49:
+      DoPort49Out(Value); // my Storage dev
     64:
       DoPort64Out(Value); // MODNB set color fore and back
     65:
@@ -1269,5 +1290,28 @@ end;
 
   end;
 }
+
+//storage device sdcard
+
+function TNBInOutSupport.DoPort48In(Value: Byte): Byte;
+begin
+  Result:=ClearBit(0,4);
+end;
+
+function TNBInOutSupport.DoPort49In(Value: Byte): Byte;
+begin
+  Result:=ClearBit(0,4); //dev ok
+end;
+
+procedure TNBInOutSupport.DoPort48Out(Value: Byte);
+Begin
+ ODS ('STRG 48='+inttostr(value));
+end;
+
+procedure TNBInOutSupport.DoPort49Out(Value: Byte);
+Begin
+ ODS ('STRG 49='+inttostr(value));
+end;
+
 
 end.

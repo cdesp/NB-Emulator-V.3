@@ -480,9 +480,6 @@ begin
     Begin
      For i:=0 to 7 do
      Begin
-     //23/1/2017
-//      if chipexists(AltSlots[i]) then
-//       z80_map_fetch(i*$2000, (i+1)*$2000-1, @AltSlots[i].memory );
       CurSlots[i]:=AltSlots[i];
      End;
     End
@@ -490,9 +487,6 @@ begin
     Begin
      For i:=0 to 7 do
      Begin
-     //23/1/2017
-//      if chipexists(MainSlots[i]) then
-//        z80_map_fetch(i*$2000, (i+1)*$2000-1, @MainSlots[i].memory );
       CurSlots[i]:=MainSlots[i];
      End;
     End;
@@ -554,9 +548,6 @@ begin
   if pageEnabled then
    if alt=altset then
    Begin
-     //23/1/2017
- //   If ChipExists(Page) then
- //     z80_map_fetch(Slot*$2000, (Slot+1)*$2000-1, @NBPages[page].memory );
     CurSlots[slot]:=NBPages[page];
    End; 
 end;
