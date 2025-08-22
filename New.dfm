@@ -242,7 +242,7 @@ object fNewBrain: TfNewBrain
           Height = 25
           Thick = 2
           Colour = 4259648
-          Text = 'VERSION 3.04B6'
+          Text = 'VERSION 3.04B7'
           Len = 16
           LedWidth = 20
           BackColor = clBlack

@@ -99,11 +99,11 @@ type
     procedure DoPort64Out(Value: Byte);
     procedure DoPort65Out(Value: Byte);
     procedure DoPort66Out(Value: Byte);
+    procedure DoPort68Out(Value: Byte);
     function DoPort48In(Value: Byte): Byte;
     function DoPort49In(Value: Byte): Byte;
     procedure DoPort48Out(Value: Byte);
     procedure DoPort49Out(Value: Byte);
-
 
 
   public
@@ -1087,12 +1087,23 @@ end;
 
 //MODNB set color fore and back
 procedure TNBInOutSupport.DoPort64Out(Value: Byte);
+var t:word;
+    b:byte;
 Begin
   if not assigned(nbcolscr) then
      NBColScr:=TNBColorScreen.create;
+  t:=z80_get_reg(Z80_REG_BC);
+  b:=(t and $fF00) shr 8;
+  if b=1 then
+  begin
+    NBColScr.ForeColor:=Value shr 4;
+    NBColScr.BackColor:=Value and $0f;
+  end
+  else
+  begin //graphics
+    NBColScr.GRColor:= Value;
+  end;
 
-  NBColScr.ForeColor:=Value shr 4;
-  NBColScr.BackColor:=Value and $0f;
 end;
 
 //Set at x,y fore color x=Reg B, Y=A
@@ -1100,8 +1111,6 @@ end;
 procedure TNBInOutSupport.DoPort65Out(Value: Byte);
 var txtAddr:word;
     t:word;
-
-
 Begin
   if not assigned(nbcolscr) then
      NBColScr:=TNBColorScreen.create;
@@ -1113,12 +1122,30 @@ Begin
    NBColScr.setTextAddr(txtAddr);
 end;
 
-//Set at x,y back color x=Reg B, Y=A
+//SET THE address to put the pixel color for left pixel
 procedure TNBInOutSupport.DoPort66Out(Value: Byte);
+var grAddr:word;
+    t:word;
 Begin
   if not assigned(nbcolscr) then
      NBColScr:=TNBColorScreen.create;
+  t:=z80_get_reg(Z80_REG_BC);
+  grAddr:=(t and $fF00) or value;
+  NBColScr.grAddr:=grAddr;
+  NBColScr.setGraphColor(1);
+end;
 
+//SET THE address to put the pixel color for right pixel
+procedure TNBInOutSupport.DoPort68Out(Value: Byte);
+var grAddr:word;
+    t:word;
+Begin
+  if not assigned(nbcolscr) then
+     NBColScr:=TNBColorScreen.create;
+  t:=z80_get_reg(Z80_REG_BC);
+  grAddr:=(t and $fF00) or value;
+  NBColScr.grAddr:=grAddr;
+  NBColScr.setGraphColor(0);
 end;
 
 
@@ -1234,7 +1261,9 @@ begin
     65:
       DoPort65Out(Value); // Set at x,y fore color x=Reg B, Y=A
     66:
-      DoPort66Out(Value); // Set at x,y Back color x=Reg B, Y=A
+      DoPort66Out(Value); // Set the graph address for left pixel
+    68:
+      DoPort68Out(Value); // Set the graph address for right pixel
     128:
       DoPort128Out(Value);
     204:

@@ -82,6 +82,7 @@ Type
     function getskipframe: integer;
     procedure SetVirtualImage;
     function GetMenuHeight: integer;
+    function GetTXTLines: byte;
   public
     horzmult: integer;
     vertmult: integer;
@@ -119,6 +120,7 @@ Type
     procedure CaptureToDisk;
     procedure TakeScreenShot;
     property DEP: Byte read GetDEP;
+    property TXTLNS: byte read GetTXTLines;
     property EL: Byte read GetEL;
     property Excess: Byte read GetExcess;
     property EXFlags: Byte read GetEXFlags;
@@ -370,6 +372,15 @@ Begin
   Else
     result := 1;
 End;
+
+//text lines available
+function TNBScreen.GetTXTLines: byte;
+begin
+  if not IsPaged then
+    result := nbmem.rom[VideoAddr.w + 4]
+  Else
+    result := GetParamed(4);
+end;
 
 function TNBScreen.GetVideoAddr: TPair;
 begin
@@ -665,7 +676,7 @@ Var
   i, j: integer;
   x, y: integer;
   lengx, lengy: integer;
-  addr: integer;
+  addr,clrAddr: integer;
   nocx: integer;
   nocy: integer;
   Ch: Byte;
@@ -675,13 +686,25 @@ Var
     clr: TColor;
     nx, ny: integer;
     i, j: integer;
+    validGraph:boolean;
   Begin
     if Reverse then
       DoSet := not DoSet;
-    if DoSet then
-      clr := WhiteColor
+    validGraph:=true;
+    if validGraph then
+    begin
+      if DoSet then
+        clr := NBColScr.getGRAddrColor(clrAddr+(x div 2), x mod 2)
+      else
+        clr := NBColScr.ScrGRBackColor;
+    end
     else
-      clr := BlackColor;
+    begin
+      if DoSet then
+        clr := WhiteColor
+      else
+        clr := BlackColor;
+    end;
     VirtImg.Pixels[x1, Startofgraph + y1] := clr;
     exit;
     nx := ScreenXOffset + x1 * horzmult;
@@ -697,6 +720,7 @@ var
 
   narrow: Boolean;
   ident: integer;
+  gcol:byte;
 begin
 
   GraphExists := false;
@@ -720,7 +744,7 @@ begin
     exit;
   End;
 
-  addr := EndOfText;
+  addr := EndOfText+1;
   GrPage := Dev33Page; // nbmem.lastpage;
   nocy := nocy + 10 - (nocy mod 10); // multiple of 10 lines always
   if nocy > 249 then
@@ -764,6 +788,8 @@ begin
         Else
         Begin
           Ch := nbmem.rom[addr];
+//          New Color Address = (Monochrome Byte Address - VidStart) * 8 + Bit Index + ColorVidStart
+          clrAddr:=(addr-642)*4;
           inc(addr);
         end;
         for x := lengx - 1 downto 0 do // enlarge pixel   x
@@ -914,9 +940,9 @@ Var
     if assigned(NBColScr) then
     begin
       if DoSet then
-        clr := NBColScr.getAddrForeColor(VidAddr)
+        clr := NBColScr.getAddrForeColor(VidAddr-642)
       else
-        clr := NBColScr.getAddrBackColor(VidAddr);
+        clr := NBColScr.getAddrBackColor(VidAddr-642);
     end
     else
     begin

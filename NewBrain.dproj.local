@@ -2,9 +2,9 @@
 <BorlandProject>
 	<Transactions>
     <Transaction>2025/07/11 09:03:22.000.957,=G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\Unit1.pas</Transaction>
-    <Transaction>2025/07/11 09:03:45.000.770,G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\Unit1.pas=G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\uNBCassette.pas</Transaction>
-    <Transaction>2025/08/08 19:36:53.860,=G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\Unit1.pas</Transaction>
-    <Transaction>2025/08/08 19:37:14.658,G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\uNBColorScreen.pas=G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\Unit1.pas</Transaction>
-    <Transaction>2025/08/09 19:55:09.407,G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\uNBKeyboard.pas=</Transaction>
+    <Transaction>2025/07/11 09:03:45.000.770,G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\uNBCassette.pas=G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\Unit1.pas</Transaction>
+    <Transaction>2025/08/08 19:36:53.000.860,=G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\Unit1.pas</Transaction>
+    <Transaction>2025/08/08 19:37:14.000.658,G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\Unit1.pas=G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\uNBColorScreen.pas</Transaction>
+    <Transaction>2025/08/09 19:55:09.000.407,G:\_Programming\NB Emulator\Emulation\SRC_Delphi_Ver3\uNBKeyboard.pas=</Transaction>
   </Transactions>
 </BorlandProject>

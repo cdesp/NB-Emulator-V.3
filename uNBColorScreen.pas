@@ -36,6 +36,7 @@ type
     NBCS_ColorIDX: TNBColorIndex;
     FScrColor: TColor;
     FColor: byte;
+    FGRColor:byte;
     procedure SetBackColor(const Value: byte);
     procedure SetForeColor(const Value: byte);
     procedure InitializeColors;
@@ -47,26 +48,39 @@ type
     procedure ClearVideoPages;
     function getVRAM(Addr: Integer):Byte;
     procedure setVRAM(Addr: Integer; Value: Byte);
+    function GetGRColor: byte;
+    procedure SetGRColor(const Value: byte);
+    function GetSCRGRBackColor: TColor;
+    function GetSCRGRForeColor: TColor;
+    function GetGRBackColor(col:byte): TColor;
+    function GetGRForeColor(col:byte): TColor;
   protected
 
   public
+    grAddr:word;
     constructor Create;
     procedure setTextAddr(addr:word);
+    procedure setGraphAddr(addr: word);
+    procedure setGraphColor(pxlSide:byte);
     function getAddrForeColor(addr: Word): TColor;
     function getAddrBackColor(addr: Word): TColor;
+    function getGRAddrColor(addr: Word; pxlSide: byte): TColor;
     procedure doScrollUp;
     property ForeColor: byte read FForeColor write SetForeColor;
     property BackColor: byte read FBackColor write SetBackColor;
     property ScrFColor: TColor read GetScrFColor;
     property ScrBColor: TColor read GetScrBColor;
-    property Color: byte read GetColor;
+    property Color: byte read GetColor write SetColor;
+    property GRColor: byte read GetGRColor write SetGRColor;
+    property ScrGRBackColor: TColor read GetSCRGRBackColor;
+    property ScrGRForeColor: TColor read GetSCRGRForeColor;
   end;
 
 Var
   NBColScr: TNBColorScreen = nil;
 
 implementation
-uses unbmemory,uNBScreen,new,Z80BaseClass;
+uses unbmemory,uNBScreen,new,Z80BaseClass,sysutils;
 
 { TNBColorScreen }
 
@@ -85,6 +99,25 @@ begin
   result:= (FForeColor shl 4) or FBackColor;
 end;
 
+function TNBColorScreen.GetGRForeColor(col: byte): TColor;
+var idx:integer;
+begin
+  idx:=(col and $F0) shr 4;
+  Result:= NBCS_ColorIDX[idx];
+end;
+
+function TNBColorScreen.GetGRColor: byte;
+begin
+  result:=FGRColor;
+end;
+
+function TNBColorScreen.GetGRBackColor(col: byte): TColor;
+var idx:integer;
+begin
+  idx:=(col and $0F);
+  Result:= NBCS_ColorIDX[idx];
+end;
+
 function TNBColorScreen.GetScrBColor: TColor;
 begin
   if FBackColor<length(NBCS_ColorIDX) then
@@ -98,6 +131,18 @@ begin
   if FForeColor<length(NBCS_ColorIDX) then
   if FForeColor<16 then
    Result:= NBCS_ColorIDX[FForeColor];
+end;
+
+function TNBColorScreen.GetSCRGRBackColor: TColor;
+begin
+  Result:= GetGRBackColor(GRColor);
+end;
+
+//no point to get this fore color info is on video color buffer
+function TNBColorScreen.GetSCRGRForeColor: TColor;
+begin
+  raise exception.Create('Foreground color is set when pixel is set. no need to call this');
+ // Result:= GetGRForeColor(GRColor);
 end;
 
 procedure TNBColorScreen.InitializeColors;
@@ -135,6 +180,11 @@ begin
   FForeColor := Value;
 end;
 
+procedure TNBColorScreen.SetGRColor(const Value: byte);
+begin
+  FGRColor := Value;
+end;
+
 procedure TNBColorScreen.SetScrColor(const Value: TColor);
 begin
   FScrColor := Value;
@@ -144,34 +194,56 @@ end;
 //we set the colors on our buffer
 procedure TNBColorScreen.setTextAddr(addr: word);
 begin
-   {if addr<16384 then
-    nbmem.SetDirectMem(mempg,addr,Color)
-   else
-    nbmem.SetDirectMem(mempg+1,addr-16384,Color);}
    setVRam(addr,Color);
+end;
+
+//A pixel is writen on this address on Graph screen
+//we set the colors on our buffer
+procedure TNBColorScreen.setGraphAddr(addr: word);
+begin
+   setVRam(addr,GRColor);
+end;
+
+procedure TNBColorScreen.setGraphColor(pxlSide: byte);
+var
+  pxl, fg: Byte;
+begin
+  fg := (GRColor shr 4) and $0F;   // extract foreground nibble
+  pxl := getVRam(grAddr);          // current color byte
+  case pxlSide of
+    0: pxl := (pxl and $F0) or fg;        // right pixel = foreground
+    1: pxl := (pxl and $0F) or (fg shl 4); // left pixel  = foreground
+  end;
+  setvRAM(grAddr, pxl);
+end;
+
+
+function TNBColorScreen.getGRAddrColor(addr:Word;pxlSide:byte):TColor;
+var clr:word;
+    cidx:integer;
+begin
+   clr:=getVRam(addr);
+   case pxlSide of
+     0: cidx := clr and $0F; //0=right pixel
+     1: cidx := clr shr 4;   //1=left pixel
+   end;
+   result:=NBCS_ColorIDX[cidx];
 end;
 
 function TNBColorScreen.getAddrForeColor(addr:Word):TColor;
 var clr:word;
     cidx:integer;
 begin
-{   if addr<16384 then
-    clr:= nbmem.GetDirectMem(mempg,addr)
-   else
-    clr:= nbmem.GetDirectMem(mempg+1,addr-16384);}
    clr:=getVRam(addr);
    cidx:=clr shr 4;
    result:=NBCS_ColorIDX[cidx];
 end;
 
+
 function TNBColorScreen.getAddrBackColor(addr:Word):TColor;
 var clr:word;
     cidx:integer;
 begin
-  { if addr<8192 then
-    clr:= nbmem.GetDirectMem(mempg,addr)
-   else
-    clr:= nbmem.GetDirectMem(mempg+1,addr-8192);}
    clr:=getVRam(addr);
    cidx:=clr and $0F;
    result:=NBCS_ColorIDX[cidx];
@@ -199,7 +271,7 @@ begin
    slt:=Addr div $2000;
    offs:=Addr-(Slt*$2000);
    vmpg:=mempg+slt;
-   Result:=nbmem.GetDirectMem(mempg,offs);
+   Result:=nbmem.GetDirectMem(vmpg,offs);
 end;
 
 procedure TNBColorScreen.setVRAM(Addr: Integer; Value: Byte);
@@ -210,7 +282,7 @@ begin
    slt:=Addr div $2000;
    offs:=Addr-(Slt*$2000);
    vmpg:=mempg+slt;
-   nbmem.SetDirectMem(mempg,offs,Value);
+   nbmem.SetDirectMem(vmpg,offs,Value);
 end;
 
 
@@ -225,7 +297,7 @@ var stAddr,cpAddr:Word;
 begin
   stAddr:=nbScreen.VideoMem.w;
   LLen:=nbScreen.EL;
-  totLines:=nbScreen.DEP;
+  totLines:=nbScreen.TXTLNS;
   for i := 1 to totLines-1 do
   begin
    cpAddr:=stAddr+LLEN;
