@@ -211,7 +211,6 @@ type
 
     procedure SetParams;
     procedure DoEmulation;
-    function GetRoot: string;
     function CreateOpenDialog: TOpenDialog;
     procedure tpbtnClick(Sender: TObject);
     function GetOLDOS: Byte;
@@ -234,6 +233,7 @@ type
     DoOne: Boolean;
     Constructor Create(Aowner: TComponent); Override;
     function ScrNormalize(t: Integer): Integer;
+    function GetRoot: string;
     procedure LoadFormPos(frm: TForm);
     procedure SaveFormPos(frm: TForm);
     procedure StartEmulation;
@@ -1098,7 +1098,8 @@ procedure TfNewBrain.Timer1Timer(Sender: TObject);
 begin
   if Debug2.Checked then
     nbscreen.paintDebug;
-
+  if assigned(nbmem) and nbmem.IsModular then
+   nbscreen.PaintVideo;
 end;
 
 var
@@ -2080,7 +2081,7 @@ begin
 end;
 
 Var
-  DebugTimer: Integer;
+  DebugTimer,ModScrTimer: Integer;
 
 procedure TfNewBrain.StartEmulation;
 begin
@@ -2118,6 +2119,18 @@ begin
     Else
       inc(DebugTimer);
   end;
+
+  if nbmem.IsModular then
+  begin
+    if ModScrTimer > 10 then
+    Begin
+      nbscreen.PaintVideo;
+      ModScrTimer := 0
+    end
+    Else
+      inc(ModScrTimer);
+  end;
+
 end;
 
 procedure TfNewBrain.PeripheralSetup1Click(Sender: TObject);

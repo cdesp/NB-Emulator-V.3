@@ -104,6 +104,7 @@ type
     function DoPort49In(Value: Byte): Byte;
     procedure DoPort48Out(Value: Byte);
     procedure DoPort49Out(Value: Byte);
+    procedure DoPort0Out(Value: Byte);
 
 
   public
@@ -121,7 +122,7 @@ type
     EnableReg: Byte;
     EnableReg2: Byte;
     LatchedParOut3: Byte;
-    RomWriteAble:Boolean;
+    RomWriteAble:Boolean; //Modular
     Procedure NBout(Port: Byte; Value: Byte);
     Function NBIn(Port: Byte): Byte;
     constructor Create;
@@ -154,7 +155,7 @@ begin
   lstick := 0;
   MDloading := false;
   MDsaving := false;
-  RomWriteAble:=false;//for Modular
+  RomWriteAble:=true;//for Modular  when out 0,0 this goes false
 end;
 
 procedure TNBInOutSupport.DoPort1Out(Value: Byte);
@@ -764,6 +765,10 @@ function TNBInOutSupport.DoPort6In(Value: Byte): Byte;
 // bit 3 = resp
 // bits 0-2 goes to Copst
 Begin
+  result:=0;
+  if prepc<$E000 then exit;// for modular NB hardware we use this to get keys
+
+
   InterruptServed := true;
   CopInt := false;
 
@@ -791,6 +796,10 @@ procedure TNBInOutSupport.DoPort7Out(Value: Byte);
   End;
 
 Begin
+
+  if nbmem.ismodular then
+    RomWriteAble:=false; //NB is running
+
   // if value<>14 then
   // ODS('port 7='+inttostr(value));
   if Testbit(Value, 4) and Testbit(Value, 5) then
@@ -966,6 +975,8 @@ End;
 
 procedure TNBInOutSupport.DoPort33Out(Value: Byte); // MY DEV DRIVER
 Begin
+  if nbmem.IsModular then exit; //
+
   if not MDsaving then
   Begin
     MDsaving := true;
@@ -1043,6 +1054,7 @@ End;
 //--Modular Newbrain
 function TNBInOutSupport.DoPort32In(Value: Byte): Byte;
 begin
+
    Result:=0;
    if kbint then
     begin
@@ -1079,7 +1091,8 @@ end;
 
 procedure TNBInOutSupport.DoPort224Out(Value: Byte); // Enable Write to ROM
 Begin
-   //11b   DISABLE INTS & DISABLE NB=RAM WRITABLE
+   //11b  Disable INTS & Disable NB = ALL RAM Writeable
+   //00b  Enable INTS & Enable NB=RAM PGes 4,5,6,9 not WRITABLE =Newbrain is STARTED
    RomWriteAble := TestBit(Value,0);
 end;
 
@@ -1150,6 +1163,21 @@ end;
 
 
 //-------------------------------
+
+// NB MODULAR PAGING
+procedure TNBInOutSupport.DoPort0Out(Value: Byte);
+var A,B:Byte;
+    t:word;
+begin
+  t:=z80_get_reg(Z80_REG_BC);
+  B:=(t shr 8) shr 5; //SLOT shr is for cpld pins
+  A:= Value;  //pAGE
+  if nbmem.ChipExists(a) then
+    nbmem.SetPageInSlotForce(B,A)
+  else
+   ODS('Page:'+inttostr(A)+' do not exist.');
+end;
+
 
 
 function TNBInOutSupport.GetClock: LongWord;
@@ -1222,6 +1250,8 @@ end;
 procedure TNBInOutSupport.NBout(Port: Byte; Value: Byte);
 begin
   Case Port of
+    0:
+      DoPort0Out(Value); //MODULAR NEWBRAIN PAGING SYSTEM
     1:
       DoPort1Out(Value);
     2:
@@ -1321,12 +1351,105 @@ end;
 }
 
 //storage device sdcard
+{
+
+    @CMD_GET_IC_VER EQU $01
+		@CMD_RESET_ALL EQU $05
+		@CMD_CHECK_EXIST EQU $06
+		@CMD_SETUSB_MODE EQU $15
+		@CMD_GET_STATUS EQU $22
+		@CMD_RDUSB_DATA0 EQU $27
+		@CMD_WR_REQ_DATA EQU $2D
+		@CMD_SETFILENAME EQU $2F
+		@CMD_DISK_CONNECT EQU $30
+		@CMD_DISK_MOUNT EQU $31
+		@CMD_FILE_OPEN EQU $32
+		@CMD_FILEENUM_GO EQU $33
+		@CMD_FILE_CREATE EQU $34
+		@CMD_FILE_CLOSE EQU $36
+		@CMD_BYTE_LOCATE EQU $39
+		@CMD_BYTE_READ EQU $3A
+		@CMD_BYTE_RD_GO EQU $3B
+		@CMD_BYTE_WRITE EQU $3C
+		@CMD_BYTE_WR_GO EQU $3D
+		@CMD_DISK_QUERY EQU $3F
+
+		@CMD_RET_SUCCESS EQU 51H
+		@CMD_RET_ABORT EQU 5FH
+
+
+}
+
+var LASTCHCMD:byte;
+    LASTCOMM:Byte;
+    subcmd:byte;
+    Filename:String;
+    btcnt:integer;
+    btToRead:word;   //bytes to read from file
+    bttosend:byte;
+    CHLoading:Boolean;
+    chf:File of Byte;
+    fileerror:boolean;
+    FileBytes:Integer;
+
+const chfolder='USBFOLDER';
 
 function TNBInOutSupport.DoPort48In(Value: Byte): Byte;
+var a,br:byte;
 begin
-  Result:=ClearBit(0,4);
+  Result:=0;
+  case LASTCHCMD of
+   6:Begin
+      case subcmd of
+        87: Result:= 255-87;
+      end;
+     End;
+   $22: case LASTCOMM of
+          $3A,$3B: if CHLoading then  //CMD_BYTE_READ  ,CMD_BYTE_RD_GO
+                 Result:= $1D    //USB_INT_DISK_READ
+               else
+                 Result:= $14; //get status 20 = USB_INT_SUCCESS
+          $15: Result:= $15; //get status 21 = USB_INT_CONNECT
+        else
+           Result:= $14; //get status 20 = USB_INT_SUCCESS
+        end;
+    $27: //read bytes from file
+        begin
+          if bttosend=0 then
+          begin
+           if btToRead>255 then
+            bttosend := 255
+           else bttosend:=btToRead;
+           result:= bttosend;//tell them how many we will send up to 255
+          end
+          else
+          begin
+
+            read(chf, a);
+{             then
+            begin
+              //error reading
+              fileerror:=true;
+              Result:=0;
+              CHLoading:=false;
+              exit;
+            end;   }
+            Result:=a;//the byte we read from file
+            dec(btToRead);
+            dec(bttosend);
+            if Eof(chf) then btToRead:=0;
+            if btToRead=0 then
+              CHLoading:=false;
+          end;
+        end;
+
+
+  end;
+//  Result:=ClearBit(0,4);
+  subcmd:=0;
 end;
 
+//CH376_INS        status in bit 4 is cmd ended
 function TNBInOutSupport.DoPort49In(Value: Byte): Byte;
 begin
   Result:=ClearBit(0,4); //dev ok
@@ -1334,12 +1457,100 @@ end;
 
 procedure TNBInOutSupport.DoPort48Out(Value: Byte);
 Begin
+ //int376DAT
  ODS ('STRG 48='+inttostr(value));
+ case LASTCOMM of
+   $6: begin
+        subcmd:=value;
+        ODS('STRG 87'); //answer with 255-87
+       end;
+   $15:;//VALUE is USB MODE
+   $2f: Filename:=Filename + chr(Value);
+   $3A:begin
+         inc(btcnt);
+         if btcnt=1 then
+             //low byte
+            btToRead:=  Value
+         else
+         Begin
+           btToRead:=  btToRead + Value *256;   // Return USB_INT_DISK_READ if no error
+           btToRead := Min(FileBytes,btToRead);
+           CHLoading:=true;
+           bttosend:=0;
+         End;
+
+       end;
+ end;
 end;
 
 procedure TNBInOutSupport.DoPort49Out(Value: Byte);
+var fnm:String;
 Begin
+ //int376CMD
+ LASTCHCMD:=Value;
+ if value<>$22 then //no status
+  LASTCOMM:=Value;
  ODS ('STRG 49='+inttostr(value));
+ Case value of
+   $1: ODS ('STRG Version');   //Low 4 bits
+   $5: begin
+          ODS ('STRG RESET ALL');
+          CHLoading:=false;
+          btToRead:=0;
+          bttosend:=0;
+          btcnt:=0;
+          Filename:='';
+
+       end;
+   $6: ODS ('STRG CHK EXISTS');
+   $10: ODS ('STRG mountDEV');
+   $15: ODS('STRG Setusb mode'); //Outs a byte
+   $22: ODS ('STRG GET STATUS');
+   $27: ODS ('STRG read data'); //read data from file   CMD_RDUSB_DATA0
+   $2f: Begin
+         ODS ('STRG Set Filename');
+         Filename:='';
+        End;
+   $30: ODS ('STRG Connect disk');
+   $31 : ODS ('STRG mount');
+   $32: begin
+          ods ('STRG File Open');
+          //file open
+          fnm:=fNewBrain.GetRoot+chfolder+Filename;
+          if fileexists(fnm)  then
+          begin
+            assignfile(chf,fnm);
+            reset(chf);
+            FileBytes:=FileSize(chf);
+          end else fileerror:=false;
+        end;
+   $34: begin
+          ods ('STRG File Create');
+          //file open
+          fnm:=fNewBrain.GetRoot+chfolder+Filename;
+          if fileexists(fnm)  then
+          begin
+            assignfile(chf,fnm);
+            reset(chf);
+          end else fileerror:=false;
+        end;
+   $36: begin
+         ODS ('STRG File CLOSE');
+          try
+            closefile(chf);
+            CHLoading:=false;
+          except
+
+          end;
+        end;
+   $3A: begin
+          ODS ('STRG CMD_BYTE_READ');
+          btcnt:=0;
+          btToRead:=0;
+        end;
+   $3b: ;//continue reading next block
+ End;
+
 end;
 
 

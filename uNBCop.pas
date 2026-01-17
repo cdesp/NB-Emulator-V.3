@@ -61,13 +61,14 @@ Type
   private
     Tapestatus: TTapeStatus;
     Tapeblock: TTapeBlock;
-    vfbuf: string;
+    Fvfbuf: string;
     NextCopOutIsData: boolean;
     NextCopInIsData: boolean;
     TapeCounter: Integer;
     procedure OpenPrinter;
     procedure WritePrinter(b: byte);
     procedure DoWriteCopByte(Value: byte);
+    procedure setvfbuf(const Value: string);
   public
     LastCopCommand: byte;
     Device: TNBDevice;
@@ -89,6 +90,7 @@ Type
     constructor Create; virtual;
     procedure ClosePrinter;
     destructor Destroy; Override;
+    property vfbuf:string read Fvfbuf write setvfbuf;
   End;
 
 Var
@@ -299,10 +301,14 @@ begin
     exit;
   end;
 
-  If (LastCopCommand = $A0) and (Length(vfbuf) < 18) then
+  If (LastCopCommand = $A0) and (Length(vfbuf) < 18)  then
   Begin
+  ods(inttohex(z80_get_reg(Z80_REG_IFF1), 4));
     s := chr(Value);
-    vfbuf := s + vfbuf;
+    if (length(vfbuf)=0) and (s=#160) then
+      s:=' '
+    else
+     vfbuf := s + vfbuf;
 {$IFDEF NBDEBUG}
     ODS('COP DISP INP ' + inttostr(Value));
 {$ENDIF}
@@ -419,6 +425,7 @@ begin
 {$IFDEF NBDEBUG}
         s := 'DISPCOM ' + ' ENREG:' + inttohex(nbio.EnableReg); {$ENDIF} // DISPCOM      1 for vf display
         vfbuf := '';
+        ods(inttohex(z80_get_reg(Z80_REG_IFF1), 4));
         NextCopOutIsData := true; // Cop will get 18 bytes
       end;
     $0B: {$IFDEF NBDEBUG} s := 'TIMCOM' {$ENDIF}; // TIMCOM       1
@@ -486,6 +493,11 @@ Begin
   Writeln(f, '');
 End;
 
+procedure TCop420.setvfbuf(const Value: string);
+begin
+ fvfbuf:=value;
+end;
+
 procedure TCop420.TranslateBuffer;
 Var
   tbit: byte;
@@ -532,6 +544,7 @@ Begin
   End;
 
 End;
+
 
 procedure TCop420.WritePrinter(b: byte);
 Begin
