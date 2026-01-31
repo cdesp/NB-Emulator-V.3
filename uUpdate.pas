@@ -55,7 +55,7 @@ type
 
 var
   frmUpdate: TfrmUpdate;
-Const Mainsite='https://www.newbrainemu.eu/new/';
+Const Mainsite='https://www.newbrainemu.eu/';
 
 implementation
 

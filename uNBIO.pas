@@ -105,6 +105,9 @@ type
     procedure DoPort48Out(Value: Byte);
     procedure DoPort49Out(Value: Byte);
     procedure DoPort0Out(Value: Byte);
+    procedure DoPort225Out(Value: Byte);
+    function DoPort72In(Value: Byte): Byte;
+    procedure DoPort72Out(Value: Byte);
 
 
   public
@@ -123,6 +126,7 @@ type
     EnableReg2: Byte;
     LatchedParOut3: Byte;
     RomWriteAble:Boolean; //Modular
+    Z80System:Integer; //Z80 Hardware emulator
     Procedure NBout(Port: Byte; Value: Byte);
     Function NBIn(Port: Byte): Byte;
     constructor Create;
@@ -1096,6 +1100,12 @@ Begin
    RomWriteAble := TestBit(Value,0);
 end;
 
+procedure TNBInOutSupport.DoPort225Out(Value: Byte); // Enable Write to ROM
+Begin
+   Z80System:=Value;
+end;
+
+
 //color screen device
 
 //MODNB set color fore and back
@@ -1179,6 +1189,19 @@ begin
 end;
 
 
+function TNBInOutSupport.DoPort72In(Value: Byte): Byte;   //PS/2
+begin
+ IF NOT KBINT THEN
+  Result:=0
+ ELSE
+  result:= RealKeyPressed;
+end;
+
+procedure TNBInOutSupport.DoPort72Out(Value: Byte);  //PS/2
+BEGIN
+
+END;
+
 
 function TNBInOutSupport.GetClock: LongWord;
 begin
@@ -1231,6 +1254,8 @@ begin
       Result := DoPort48In(Port);
     49:
       Result := DoPort49In(Port);
+    72:
+      Result := DoPort72In(Port);     //MODULAR INPUT FOR PS/2 KEYBOARD
     128:
       Result := DoPort128In(Port);       //Modular CPU SPEED
     204:
@@ -1294,6 +1319,8 @@ begin
       DoPort66Out(Value); // Set the graph address for left pixel
     68:
       DoPort68Out(Value); // Set the graph address for right pixel
+    72:
+      DoPort72Out(Value); //PS/2 KEYBOARD
     128:
       DoPort128Out(Value);
     204:
@@ -1306,6 +1333,8 @@ begin
       DoPort207Out(Value);
     224:
       DoPort224Out(Value); //Modular newbrain Enb write to rom
+    225:
+      DoPort225Out(Value); //Modular Z80 HARD EMU set Selected System (0=Atlas,1=Newbrain,2=Spectrum,3=Amstrad)
     255:
       DoPort255Out(Value); // Paging
   Else

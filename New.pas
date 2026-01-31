@@ -1179,7 +1179,10 @@ Begin
   if sle = nil then
     sle := TStringlist.Create;
   if bootok and ((NBkey = $80) or (NBkey = 0)) and cop420.KBEnabled then
-    CheckKeyBoard;
+    CheckKeyBoard
+  else
+   if nbmem.IsModular then
+       CheckKeyBoard;
   If Debugging then
   Begin
     if emuled >= St then

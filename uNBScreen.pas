@@ -83,6 +83,8 @@ Type
     procedure SetVirtualImage;
     function GetMenuHeight: integer;
     function GetTXTLines: byte;
+    procedure PaintAtlas;
+    procedure DoAtlasPaint;
   public
     horzmult: integer;
     vertmult: integer;
@@ -154,7 +156,7 @@ Var
 implementation
 
 Uses z80baseclass, Sysutils, forms, uNBMemory, frmNewdebug, new,
-  jcllogic, windows, uNBCop, uNBIO, controls;
+  jcllogic, windows, uNBCop, uNBIO, controls,math;
 
 // loads the charset from the disk
 procedure LoadCharSet(fname: string);
@@ -185,14 +187,10 @@ begin
   pgnbs := TNBPGStreamManipulation.Create;
   horzmult := 2;
   vertmult := 2;
-  EMUScrheight := 250; // variable
-  EMUScrWidth := 640;
   // VirtImgC:=TDxdib.create(fNewbrain);
   VirtImg := TDIB.Create;
   // Create the scaled destination image (640x500)
   ScaledImg := TDIB.Create;
-  ScaledImg.Width := 640;
-  ScaledImg.Height := 500;
   ScaledImg.BitCount := 24;
   if assigned(NBColScr) then
    freeandnil(NBColScr);
@@ -200,6 +198,11 @@ end;
 
 Procedure TNBScreen.SetVirtualImage;
 Begin
+  EMUScrheight := 250; // variable
+  EMUScrWidth := 640;
+  ScaledImg.Width := 640;
+  ScaledImg.Height := 500;
+
   if EL = 128 then
     VirtImg.Width := 640
   else
@@ -691,7 +694,7 @@ Var
     if Reverse then
       DoSet := not DoSet;
     validGraph:=true;
-    if validGraph then
+    if validGraph and assigned(NBColScr) then
     begin
       if DoSet then
         clr := NBColScr.getGRAddrColor(clrAddr+(x div 2), x mod 2)
@@ -1042,6 +1045,173 @@ Begin
   result := GetSystemMetrics(SM_CYMENU);
 End;
 
+//******************************ATLAS******************************
+
+
+var  isGraph:boolean;
+  isHires:boolean;
+
+
+procedure TNBScreen.DoAtlasPaint;
+var
+  x,y: Integer;
+  addr,staddr:Integer;
+  bt,btl,bth:byte;
+  bt8:byte;
+  col:tcolor;
+
+
+  function getBit(v,b:Byte):Byte;
+  begin
+   b:=trunc(system.math.Power(2,b));
+   if v and b=b then result:=1 else result:=0;
+  end;
+
+  function get4bitcolor(bt:byte):TColor;
+  var r,g,b,i:Byte;
+  Begin
+    i:=getBit(bt,3);
+    if (i=0) then
+    Begin
+      b:=getBit(bt,0) * 127;
+      g:=getBit(bt,1) * 127;
+      r:=getBit(bt,2) * 127;
+    end
+    else
+    begin
+      b:=getBit(bt,0) * 255;
+      g:=getBit(bt,1) * 255;
+      r:=getBit(bt,2) * 255;
+    end;
+    result:=RGB(r,g,b);
+  End;
+
+var xpix,ypix,clr:byte;
+    forecol,backcol:tcolor;
+    screenMode:Byte;
+
+Begin
+
+
+   screenMode:=nbmem.GetDirectMem(11,$1ff8);    //32760 if page 11 on bank 4
+   ishiRes:= (screenMode and 2=2);
+   isGraph:= not (screenMode and 1=1);
+   //00=graph low res    F5
+   //01=text low res     F6
+   //10=graph hires      F7
+   //11=text hires       F8
+   forecol:=clGreen;
+   backCol:=clBlack;
+
+   staddr:=$0000;
+   //4bits per pixel
+   //
+
+
+   if ishires then
+   Begin
+   for y := 0 to 400-1 do
+     for x:=0 to 640-1 do
+     Begin
+      if isgraph then //640x400 b/w
+      Begin
+       addr:=y*(640 div 8)+(x div 8);
+       bt:=nbmem.GetDirectMem(8,addr); //auto advances to other pages if addr>8000
+       xpix:=x mod 8;
+       if getbit(bt,xpix)=1 then
+         col:=forecol
+       else
+         col:=backcol;
+       end
+       else
+       Begin
+          //80x40 chars of 8x10 each b/w
+
+          addr:=(y div 10)*80  +(x div 8);
+          bt:=nbmem.GetDirectMem(8,addr);
+          //bt:=nbmem.ROM[addr];
+          xpix:=x  mod 8;
+          ypix:=y  mod 10;
+          bt:=ReverseBits(Chararr[bt+ypix*256]);//get line pattern for char
+          //clr:=nbmem.GetDirectMem(8,addr+1024);
+          if getbit(bt,xpix)=1 then
+           col:=forecol
+          else
+           col:=backcol;
+       End;
+       VirtImg.Pixels[x,y]:=col;
+     End;
+
+   end
+   else    //lowres
+   Begin
+   for y := 0 to 400-1 do
+     for x:=0 to 640-1 do
+     Begin
+      if isgraph then
+      Begin
+       addr:=(y div 2)*160+(x div 2) div 2;
+       bt:=nbmem.GetDirectMem(8,addr); //auto advances to other pages if addr>8000
+       //bt:=nbmem.ROM[addr];
+       btl:=bt and $0f;
+       bth:=(bt and $f0) shr 4;
+       if x mod 4<2 then
+         col:=get4bitcolor(btH)
+       else
+         col:=get4bitcolor(btL);
+       end
+       else
+       Begin
+          //40x20 chars of 8x10 each
+
+          addr:=(y div 20)*40  +(x div 8 div 2);
+          bt:=nbmem.GetDirectMem(8,addr);
+          //bt:=nbmem.ROM[addr];
+          xpix:=(x div 2) mod 8;
+          ypix:=(y div 2) mod 10;
+          bt:=ReverseBits(Chararr[bt+ypix*256]);//get line pattern for char
+          clr:=nbmem.GetDirectMem(8,addr+1024);
+          //clr:=nbmem.ROM[addr+1024];
+
+          if getbit(bt,xpix)=1 then
+           col:=get4bitcolor(clr and $0f)
+          else
+           col:=get4bitcolor((clr and $f0) shr 4);
+       End;
+       VirtImg.Pixels[x,y]:=col;
+     End;
+    end;
+
+
+End;
+
+procedure TNBScreen.PaintAtlas;
+
+
+begin
+
+  WhiteColor:=clWhite;
+  BlackColor:=clBlack;
+  horzmult:=1;
+  vertmult:=1;
+  EMUScrheight:=400; //variable
+  EMUScrWidth:=640;
+  VirtImg.Width := EMUScrWidth;
+  VirtImg.Height := EMUScrheight;
+  VirtImg.BitCount := 24;
+  ScaledImg.Width := EMUScrWidth;
+  ScaledImg.Height := EMUScrheight;
+  ScaledImg.BitCount := 24;
+  DoAtlasPaint;
+  fnewbrain.Height:=720;
+
+
+end;
+
+
+
+//******************************ATLAS END******************************
+
 // Paint the video screen text
 function TNBScreen.PaintVideo: Boolean;
 var
@@ -1161,7 +1331,25 @@ begin
   try
     if not Newscr.CanDraw or (EL = 0) then
       exit;
-    if not nbio.tvenabled then
+
+    if nbmem.IsModular then
+    begin
+      if NBIO.Z80System=0 then
+      begin
+        PaintAtlas;
+        fNewBrain.ClientWidth:=660;
+//        fNewbrain.Newscr.Width:=800;
+//        fNewbrain.Newscr.height:=480;
+        ScaledImg.Canvas.StretchDraw(Rect(0, 0, 640, 400), VirtImg);
+        DoPaintDX;
+        exit;
+
+      end;
+    end;
+
+
+
+    if not nbio.tvenabled then //modular is on for testing the bootloader
     begin
       ScaledImg.Fill(BlackColor);
       DoPaintDX;
@@ -1530,3 +1718,5 @@ Begin
 end;
 
 end.
+
+
