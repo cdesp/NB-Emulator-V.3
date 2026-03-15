@@ -113,10 +113,6 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="debug.pas">
-            <Form>Form2</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
         <DCCReference Include="frmAbout.pas">
             <Form>fAbout</Form>
             <FormType>dfm</FormType>
@@ -216,7 +212,6 @@
             <Form>$R *.res</Form>
         </DCCReference>
         <DCCReference Include="uNBCassette.pas"/>
-        <DCCReference Include="uNBColorScreen.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

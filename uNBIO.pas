@@ -88,27 +88,6 @@ type
     function DoPort206In(Value: Byte): Byte;
     procedure DoPort207Out(Value: Byte);
     function DoPort207In(Value: Byte): Byte;
-    function DoPort33In(Value: Byte): Byte;
-    procedure DoPort33Out(Value: Byte);
-    function DoPort44In(Value: Byte): Byte;
-    procedure DoPort44Out(Value: Byte);
-    function DoPort128In(Value: Byte): Byte;
-    function DoPort37In(Value: Byte): Byte;
-    function DoPort32In(Value: Byte): Byte;
-    procedure DoPort224Out(Value: Byte);
-    procedure DoPort64Out(Value: Byte);
-    procedure DoPort65Out(Value: Byte);
-    procedure DoPort66Out(Value: Byte);
-    procedure DoPort68Out(Value: Byte);
-    function DoPort48In(Value: Byte): Byte;
-    function DoPort49In(Value: Byte): Byte;
-    procedure DoPort48Out(Value: Byte);
-    procedure DoPort49Out(Value: Byte);
-    procedure DoPort0Out(Value: Byte);
-    procedure DoPort225Out(Value: Byte);
-    function DoPort72In(Value: Byte): Byte;
-    procedure DoPort72Out(Value: Byte);
-
 
   public
     KBStatus: TKeybState; // if true we send the data key
@@ -145,7 +124,7 @@ Var
 implementation
 
 uses uNBMemory, uNBScreen, new, sysutils, jclLogic, z80baseclass, uNBCop,
-  windows, uNBCPM, unbtypes,uNBColorScreen;
+  windows, uNBCPM, unbtypes;
 
 constructor TNBInOutSupport.Create;
 begin
@@ -946,263 +925,6 @@ Begin
   nbscreen.TVModeReg := Value;
 End;
 
-// Testing for NB Laptop
-var
-  dirsending: Boolean = false;
-  dirlist: TStringlist = nil;
-  dirlin, dirch: Integer;
-  dirret: Integer = 255;
-  selectedfile: string;
-
-function TNBInOutSupport.DoPort33In(Value: Byte): Byte; // MY DEV DRIVER
-var
-  b: Byte;
-Begin
-  b := 0;
-  if not MDloading then
-  begin
-    MDloading := true;
-    st := TFileStream.Create('.\discs\games2\' + selectedfile, fmOpenRead);
-  end;
-  if st.Position < st.Size then
-    st.Read(b, 1);
-
-  if ((lsbyte = 4) and (b = 13)) or (st.Position = st.Size) then
-  Begin
-    st.Free;
-    st := nil;
-    MDloading := false;
-  end;
-  lsbyte := b;
-  Result := b;
-End;
-
-procedure TNBInOutSupport.DoPort33Out(Value: Byte); // MY DEV DRIVER
-Begin
-  if nbmem.IsModular then exit; //
-
-  if not MDsaving then
-  Begin
-    MDsaving := true;
-    st := TFileStream.Create('.\discs\games2\test2.bas',
-      fmCreate or fmOpenWrite);
-  End;
-  st.Write(Value, 1);
-End;
-
-// Send the directory files byte by byte
-function TNBInOutSupport.DoPort44In(Value: Byte): Byte; // MY DEV DRIVER
-var
-  s: string;
-Begin
-  if dirret <> 255 then
-  Begin
-    Result := dirret;
-    dirret := 255;
-    exit;
-  End;
-
-  if dirlist = nil then
-    dirlist := TStringlist.Create;
-
-  if not dirsending then
-  begin
-    dirsending := true;
-    dirlist := TStringlist(new.GetFiles('\Discs\games2\*.*', false));
-    dirlin := 0;
-    dirch := 1;
-  end;
-
-  while dirch > length(dirlist[dirlin]) do
-  Begin
-    if dirlin < dirlist.count - 1 then
-    Begin
-      dirlin := dirlin + 1;
-      dirch := 1;
-      Result := 13;
-      exit;
-    End
-    else // end the dir
-    Begin
-      Result := 0;
-      dirsending := false;
-      exit;
-    End;
-  end;
-
-  s := dirlist[dirlin];
-  Result := Byte(s[dirch]);
-  dirch := dirch + 1;
-End;
-
-// Select a file in the default directory
-procedure TNBInOutSupport.DoPort44Out(Value: Byte); // MY DEV DRIVER
-Begin
-  if Value = 0 then
-  Begin
-    if dirlist = nil then
-      dirlist := TStringlist.Create;
-    dirlist := TStringlist(new.GetFiles('\Discs\games2\*.*', false));
-    if dirlist.indexof(selectedfile) > 0 then
-      dirret := 0
-    else
-      dirret := 250; // Error file not found
-  End;
-  if Value = 134 then
-    selectedfile := ''
-  else
-    selectedfile := selectedfile + char(Value);
-End;
-
-
-//--Modular Newbrain
-function TNBInOutSupport.DoPort32In(Value: Byte): Byte;
-begin
-
-   Result:=0;
-   if kbint then
-    begin
-      kbint := false;
-//      Result := keypressed;
-      Result := RealKeyPressed;
-      keypressed := $80;
-    end;
-end;
-
-function TNBInOutSupport.DoPort37In(Value: Byte): Byte;
-begin
-  Result:=0;
-  if nbmem.rom[$5D]+nbmem.rom[$5C]=0 then //ram is 0
-  begin
-   nbmem.rom[$5D]:=$2;
-   nbmem.rom[$5C]:=$68;
-  end;
-
-  if kbint then
-  begin
-    Result:=Setbit(Result,0); //if keyboard has data
-    Result:=Setbit(Result,5); //if keyboard has data
-  end
-  else
-   Result:=Setbit(Result,5);
-end;
-
-
-function TNBInOutSupport.DoPort128In(Value: Byte): Byte;
-begin
-  Result:= 4;
-end;
-
-procedure TNBInOutSupport.DoPort224Out(Value: Byte); // Enable Write to ROM
-Begin
-   //11b  Disable INTS & Disable NB = ALL RAM Writeable
-   //00b  Enable INTS & Enable NB=RAM PGes 4,5,6,9 not WRITABLE =Newbrain is STARTED
-   RomWriteAble := TestBit(Value,0);
-end;
-
-procedure TNBInOutSupport.DoPort225Out(Value: Byte); // Enable Write to ROM
-Begin
-   Z80System:=Value;
-end;
-
-
-//color screen device
-
-//MODNB set color fore and back
-procedure TNBInOutSupport.DoPort64Out(Value: Byte);
-var t:word;
-    b:byte;
-Begin
-  if not assigned(nbcolscr) then
-     NBColScr:=TNBColorScreen.create;
-  t:=z80_get_reg(Z80_REG_BC);
-  b:=(t and $fF00) shr 8;
-  if b=1 then
-  begin
-    NBColScr.ForeColor:=Value shr 4;
-    NBColScr.BackColor:=Value and $0f;
-  end
-  else
-  begin //graphics
-    NBColScr.GRColor:= Value;
-  end;
-
-end;
-
-//Set at x,y fore color x=Reg B, Y=A
-//for text here B=hi byte and A=low byte of address
-procedure TNBInOutSupport.DoPort65Out(Value: Byte);
-var txtAddr:word;
-    t:word;
-Begin
-  if not assigned(nbcolscr) then
-     NBColScr:=TNBColorScreen.create;
-  t:=z80_get_reg(Z80_REG_BC);
-  txtAddr:=(t and $fF00) or value;
-  if txtAddr=$FFFF then
-    NBColScr.doScrollUp          //hardware scroll up the screeen
-  else
-   NBColScr.setTextAddr(txtAddr);
-end;
-
-//SET THE address to put the pixel color for left pixel
-procedure TNBInOutSupport.DoPort66Out(Value: Byte);
-var grAddr:word;
-    t:word;
-Begin
-  if not assigned(nbcolscr) then
-     NBColScr:=TNBColorScreen.create;
-  t:=z80_get_reg(Z80_REG_BC);
-  grAddr:=(t and $fF00) or value;
-  NBColScr.grAddr:=grAddr;
-  NBColScr.setGraphColor(1);
-end;
-
-//SET THE address to put the pixel color for right pixel
-procedure TNBInOutSupport.DoPort68Out(Value: Byte);
-var grAddr:word;
-    t:word;
-Begin
-  if not assigned(nbcolscr) then
-     NBColScr:=TNBColorScreen.create;
-  t:=z80_get_reg(Z80_REG_BC);
-  grAddr:=(t and $fF00) or value;
-  NBColScr.grAddr:=grAddr;
-  NBColScr.setGraphColor(0);
-end;
-
-
-//-------------------------------
-
-// NB MODULAR PAGING
-procedure TNBInOutSupport.DoPort0Out(Value: Byte);
-var A,B:Byte;
-    t:word;
-begin
-  t:=z80_get_reg(Z80_REG_BC);
-  B:=(t shr 8) shr 5; //SLOT shr is for cpld pins
-  A:= Value;  //pAGE
-  if nbmem.ChipExists(a) then
-    nbmem.SetPageInSlotForce(B,A)
-  else
-   ODS('Page:'+inttostr(A)+' do not exist.');
-end;
-
-
-function TNBInOutSupport.DoPort72In(Value: Byte): Byte;   //PS/2
-begin
- IF NOT KBINT THEN
-  Result:=0
- ELSE
-  result:= RealKeyPressed;
-end;
-
-procedure TNBInOutSupport.DoPort72Out(Value: Byte);  //PS/2
-BEGIN
-
-END;
-
-
 function TNBInOutSupport.GetClock: LongWord;
 begin
   Result := GetTickCount;
@@ -1242,22 +964,6 @@ begin
       Result := DoPort24In(Port);
     25:
       Result := DoPort25In(Port);
-    32:
-      Result := DoPort32In(Port);
-    33:
-      Result := DoPort33In(Port);
-    37:
-      Result := DoPort37In(Port);       //Modular RS232  use it for keyboard
-    44:
-      Result := DoPort44In(Port);
-    48:
-      Result := DoPort48In(Port);
-    49:
-      Result := DoPort49In(Port);
-    72:
-      Result := DoPort72In(Port);     //MODULAR INPUT FOR PS/2 KEYBOARD
-    128:
-      Result := DoPort128In(Port);       //Modular CPU SPEED
     204:
       Result := DoPort204In(Port);
     205:
@@ -1275,8 +981,6 @@ end;
 procedure TNBInOutSupport.NBout(Port: Byte; Value: Byte);
 begin
   Case Port of
-    0:
-      DoPort0Out(Value); //MODULAR NEWBRAIN PAGING SYSTEM
     1:
       DoPort1Out(Value);
     2:
@@ -1303,24 +1007,6 @@ begin
       DoPort24Out(Value);
     25:
       DoPort25Out(Value);
-    33:
-      DoPort33Out(Value); // MY TEST DRIVER
-    44:
-      DoPort44Out(Value); // select files and dir
-    48:
-      DoPort48Out(Value); // my Storage dev
-    49:
-      DoPort49Out(Value); // my Storage dev
-    64:
-      DoPort64Out(Value); // MODNB set color fore and back
-    65:
-      DoPort65Out(Value); // Set at x,y fore color x=Reg B, Y=A
-    66:
-      DoPort66Out(Value); // Set the graph address for left pixel
-    68:
-      DoPort68Out(Value); // Set the graph address for right pixel
-    72:
-      DoPort72Out(Value); //PS/2 KEYBOARD
     128:
       DoPort128Out(Value);
     204:
@@ -1331,10 +1017,6 @@ begin
       DoPort206Out(Value);
     207:
       DoPort207Out(Value);
-    224:
-      DoPort224Out(Value); //Modular newbrain Enb write to rom
-    225:
-      DoPort225Out(Value); //Modular Z80 HARD EMU set Selected System (0=Atlas,1=Newbrain,2=Spectrum,3=Amstrad)
     255:
       DoPort255Out(Value); // Paging
   Else
@@ -1379,208 +1061,7 @@ end;
   end;
 }
 
-//storage device sdcard
-{
 
-    @CMD_GET_IC_VER EQU $01
-		@CMD_RESET_ALL EQU $05
-		@CMD_CHECK_EXIST EQU $06
-		@CMD_SETUSB_MODE EQU $15
-		@CMD_GET_STATUS EQU $22
-		@CMD_RDUSB_DATA0 EQU $27
-		@CMD_WR_REQ_DATA EQU $2D
-		@CMD_SETFILENAME EQU $2F
-		@CMD_DISK_CONNECT EQU $30
-		@CMD_DISK_MOUNT EQU $31
-		@CMD_FILE_OPEN EQU $32
-		@CMD_FILEENUM_GO EQU $33
-		@CMD_FILE_CREATE EQU $34
-		@CMD_FILE_CLOSE EQU $36
-		@CMD_BYTE_LOCATE EQU $39
-		@CMD_BYTE_READ EQU $3A
-		@CMD_BYTE_RD_GO EQU $3B
-		@CMD_BYTE_WRITE EQU $3C
-		@CMD_BYTE_WR_GO EQU $3D
-		@CMD_DISK_QUERY EQU $3F
-
-		@CMD_RET_SUCCESS EQU 51H
-		@CMD_RET_ABORT EQU 5FH
-
-
-}
-
-var LASTCHCMD:byte;
-    LASTCOMM:Byte;
-    subcmd:byte;
-    Filename:String;
-    btcnt:integer;
-    btToRead:word;   //bytes to read from file
-    bttosend:byte;
-    CHLoading:Boolean;
-    chf:File of Byte;
-    fileerror:boolean;
-    FileBytes:Integer;
-
-const chfolder='USBFOLDER';
-
-function TNBInOutSupport.DoPort48In(Value: Byte): Byte;
-var a,br:byte;
-begin
-  Result:=0;
-  case LASTCHCMD of
-   6:Begin
-      case subcmd of
-        87: Result:= 255-87;
-      end;
-     End;
-   $22: case LASTCOMM of
-          $3A,$3B: if CHLoading then  //CMD_BYTE_READ  ,CMD_BYTE_RD_GO
-                 Result:= $1D    //USB_INT_DISK_READ
-               else
-                 Result:= $14; //get status 20 = USB_INT_SUCCESS
-          $15: Result:= $15; //get status 21 = USB_INT_CONNECT
-        else
-           Result:= $14; //get status 20 = USB_INT_SUCCESS
-        end;
-    $27: //read bytes from file
-        begin
-          if bttosend=0 then
-          begin
-           if btToRead>255 then
-            bttosend := 255
-           else bttosend:=btToRead;
-           result:= bttosend;//tell them how many we will send up to 255
-          end
-          else
-          begin
-
-            read(chf, a);
-{             then
-            begin
-              //error reading
-              fileerror:=true;
-              Result:=0;
-              CHLoading:=false;
-              exit;
-            end;   }
-            Result:=a;//the byte we read from file
-            dec(btToRead);
-            dec(bttosend);
-            if Eof(chf) then btToRead:=0;
-            if btToRead=0 then
-              CHLoading:=false;
-          end;
-        end;
-
-
-  end;
-//  Result:=ClearBit(0,4);
-  subcmd:=0;
-end;
-
-//CH376_INS        status in bit 4 is cmd ended
-function TNBInOutSupport.DoPort49In(Value: Byte): Byte;
-begin
-  Result:=ClearBit(0,4); //dev ok
-end;
-
-procedure TNBInOutSupport.DoPort48Out(Value: Byte);
-Begin
- //int376DAT
- ODS ('STRG 48='+inttostr(value));
- case LASTCOMM of
-   $6: begin
-        subcmd:=value;
-        ODS('STRG 87'); //answer with 255-87
-       end;
-   $15:;//VALUE is USB MODE
-   $2f: Filename:=Filename + chr(Value);
-   $3A:begin
-         inc(btcnt);
-         if btcnt=1 then
-             //low byte
-            btToRead:=  Value
-         else
-         Begin
-           btToRead:=  btToRead + Value *256;   // Return USB_INT_DISK_READ if no error
-           btToRead := Min(FileBytes,btToRead);
-           CHLoading:=true;
-           bttosend:=0;
-         End;
-
-       end;
- end;
-end;
-
-procedure TNBInOutSupport.DoPort49Out(Value: Byte);
-var fnm:String;
-Begin
- //int376CMD
- LASTCHCMD:=Value;
- if value<>$22 then //no status
-  LASTCOMM:=Value;
- ODS ('STRG 49='+inttostr(value));
- Case value of
-   $1: ODS ('STRG Version');   //Low 4 bits
-   $5: begin
-          ODS ('STRG RESET ALL');
-          CHLoading:=false;
-          btToRead:=0;
-          bttosend:=0;
-          btcnt:=0;
-          Filename:='';
-
-       end;
-   $6: ODS ('STRG CHK EXISTS');
-   $10: ODS ('STRG mountDEV');
-   $15: ODS('STRG Setusb mode'); //Outs a byte
-   $22: ODS ('STRG GET STATUS');
-   $27: ODS ('STRG read data'); //read data from file   CMD_RDUSB_DATA0
-   $2f: Begin
-         ODS ('STRG Set Filename');
-         Filename:='';
-        End;
-   $30: ODS ('STRG Connect disk');
-   $31 : ODS ('STRG mount');
-   $32: begin
-          ods ('STRG File Open');
-          //file open
-          fnm:=fNewBrain.GetRoot+chfolder+Filename;
-          if fileexists(fnm)  then
-          begin
-            assignfile(chf,fnm);
-            reset(chf);
-            FileBytes:=FileSize(chf);
-          end else fileerror:=false;
-        end;
-   $34: begin
-          ods ('STRG File Create');
-          //file open
-          fnm:=fNewBrain.GetRoot+chfolder+Filename;
-          if fileexists(fnm)  then
-          begin
-            assignfile(chf,fnm);
-            reset(chf);
-          end else fileerror:=false;
-        end;
-   $36: begin
-         ODS ('STRG File CLOSE');
-          try
-            closefile(chf);
-            CHLoading:=false;
-          except
-
-          end;
-        end;
-   $3A: begin
-          ODS ('STRG CMD_BYTE_READ');
-          btcnt:=0;
-          btToRead:=0;
-        end;
-   $3b: ;//continue reading next block
- End;
-
-end;
 
 
 end.

@@ -727,9 +727,12 @@ begin
   inherited;
 end;
 
+//var slk:Tstringlist=nil;
+
 procedure TNbKeyBoard.Import(s:String);
 Var k:Integer;
     cnt:Integer;
+
 
   function GetPCKeyIDLocal: string;
   Var SKey:String;
@@ -791,6 +794,10 @@ Var k:Integer;
 
 
 begin
+ // if not assigned(slk) then
+ //  slk:=TStringlist.Create;
+
+
   cnt:=0;
   fNewBrain.thrEmulate.Enabled:=false;
   try
@@ -803,11 +810,14 @@ begin
       inc(cnt);
       Akey:=GETPCKeyIDLocal;//Keydown
       NBAddKey;
+     // slk.Add(Akey);
 
    //   PCKeyDOWN(AkeyInt,AShift);
       while NBkeyList.count>0 do
       begin
         EmulateFor(10);
+        if (cnt>10) and (cnt mod 80 > 0) and (cnt mod 80 < 3) then
+         EmulateFor(20);
         if application.Terminated then
              break;
       end;

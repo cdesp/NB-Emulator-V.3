@@ -242,7 +242,7 @@ object fNewBrain: TfNewBrain
           Height = 25
           Thick = 2
           Colour = 4259648
-          Text = 'VERSION 3.04B9'
+          Text = 'VERSION 3.04B11'
           Len = 16
           LedWidth = 20
           BackColor = clBlack
@@ -694,6 +694,12 @@ object fNewBrain: TfNewBrain
       end
       object SetBasicFile1: TMenuItem
         Action = acTapeSelect
+      end
+      object ape2TapeManagement1: TMenuItem
+        Action = acTapeManagement2
+      end
+      object ape2SelectFileForLoading1: TMenuItem
+        Action = acTapeSelect2
       end
     end
     object Storage1: TMenuItem

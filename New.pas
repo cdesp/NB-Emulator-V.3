@@ -137,6 +137,8 @@ type
     Label2: TLabel;
     lblTape2Info: TLabel;
     lblTape2Info2: TLabel;
+    ape2TapeManagement1: TMenuItem;
+    ape2SelectFileForLoading1: TMenuItem;
     procedure Button1Click(Sender: TObject);
     procedure Start1Click(Sender: TObject);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -221,6 +223,8 @@ type
     procedure setDebugging(const Value: Boolean);
     procedure MakeTapeButtons(parent: TWinControl; tgSt: Integer = 0);
     function GetScreenRatio: single;
+    procedure LoadDiskNames;
+    procedure SaveDiskNames;
 
   public
     { Public declarations }
@@ -820,7 +824,10 @@ begin
   FullScreen1.Checked := Not FullScreen1.Checked;
   FullScreen1Click(nil);
   if ShowDriveContents1.Checked and WithCPM1.Checked then
+  begin
+    LoadDiskNames;
     ShowDriveContents1Click(nil);
+  end;
   if not WithCPM1.Checked then
   Begin
     acDiskManagement.enabled := false;
@@ -1578,14 +1585,22 @@ var
   s: String;
   i: Integer;
 begin
-  try
     if Assigned(nbdiscctrl) then
     Begin
-      nbdiscctrl.dir1 := '';
-      nbdiscctrl.dir2 := '';
+      SaveDiskNames;
+      try
+        nbdiscctrl.dir1 := '';
+      except
+       on e:exception do
+        ODS(e.Message);
+      end;
+      try
+        nbdiscctrl.dir2 := '';
+      except
+       on e:exception do
+        ODS(e.Message);
+      end;
     End;
-  Except
-  End;
   IsSuspended := true;
   // sleep(1000);
   try
@@ -1766,6 +1781,38 @@ begin
     ShowDriveContents1Click(nil);
   End;
 end;
+
+procedure TfNewBrain.SaveDiskNames;
+Var
+  inif: TIniFile;
+  pth: String;
+begin
+  pth := ExtractFilepath(application.exename);
+  inif := TIniFile.Create(pth + 'Config.Ini');
+  try
+    inif.WriteString('DISK', 'DIR1', nbdiscctrl.dir1);
+    inif.WriteString('DISK', 'DIR2', nbdiscctrl.dir2);
+  Finally
+    inif.free;
+  End;
+end;
+
+procedure TfNewBrain.LoadDiskNames;
+Var
+  inif: TIniFile;
+  pth: String;
+begin
+  pth := ExtractFilepath(application.exename);
+  inif := TIniFile.Create(pth + 'Config.Ini');
+  try
+    nbdiscctrl.dir1 := inif.ReadString('DISK', 'DIR1', nbdiscctrl.dir1);
+    nbdiscctrl.dir2 := inif.ReadString('DISK', 'DIR2', nbdiscctrl.dir2);
+
+  Finally
+    inif.free;
+  End;
+end;
+
 
 procedure TfNewBrain.SaveFormPos(frm: TForm);
 var

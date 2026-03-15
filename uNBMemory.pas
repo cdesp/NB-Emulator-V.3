@@ -239,37 +239,7 @@ begin
   For i:=96 to 107 do
    CreatePage(i); // Exp ram 96k
 
-  if vers=0 then
-  begin
-    CreatePage(0);
-    CreatePage(1);
-    CreatePage(2);
-    CreatePage(3);
-    CreatePage(4);
-    CreatePage(5);
-    CreatePage(6);
-    CreatePage(7);
-    CreatePage(8);
-    CreatePage(9);
-    CreatePage(10);
-    CreatePage(11);
-    CreatePage(12);
-    CreatePage(13);
-    CreatePage(14);
-    CreatePage(15);
 
-    LoadRom(0,'BOOTLD.BIN'); //Bootloader
-    SetPageInSlot(0,0,false); //0000   bootloader
-    SetPageInSlot(1,1,False); //2000
-    SetPageInSlot(2,2,False); //4000
-    SetPageInSlot(3,3,False); //6000
-    SetPageInSlot(4,4,False); //8000
-    SetPageInSlot(5,5,False); //A000
-    SetPageInSlot(6,6,False); //C000
-    SetPageInSlot(7,7,False); //E000
-    exit;
-  end
-  else
   if vers=1 then
   Begin
    if not oldv then
@@ -320,26 +290,6 @@ begin
        LoadRom(121,'EMU_CDROM.rom');
        LoadRom(120,'EMU_EFROM.rom'); //Series 2 ROM
       end;
-    3:
-      Begin
-       LoadRom(123,'MOD_80ROM.rom'); //Modular newbrain Rom
-       LoadRom(122,'MOD_ABROM.rom');
-       LoadRom(121,'MOD_CDROM.rom');
-       LoadRom(120,'MOD_EFROM.rom'); //Series 2 ROM
-       SetPageInSlot(4,123,False); //8000   rom
-       //uses page 96 and 97 of ram for 16KB Video RAM
-      end;
-     4:
-      Begin
-       LoadRom(126,'MOD_CDROMPG.rom'); //Modular newbrain Rom
-       LoadRom(123,'MOD_80ROMPG.rom'); //Modular newbrain Rom
-       LoadRom(122,'MOD_ABROM.rom');
-       LoadRom(121,'MOD_CDROM.rom');
-       LoadRom(120,'MOD_EFROM.rom'); //Series 2 ROM
-       SetPageInSlot(4,123,False); //8000   rom
-       //uses page 96 and 97,98,99 of ram for 16KB Video RAM
-      end;
-
     end;
   end;
 
@@ -617,16 +567,6 @@ begin
        Exit;
      End;
 
-     if ismodular then
-     begin
-       if nbio.RomWriteAble or ((not p^.IsRom) and (not (p^.Page in [4,5,6,9])) )  then
-       Begin
-        p^.Memory[offs]:=Value;
-       End
-       Else
-        ODS('Page not Writable');
-     end
-     else
      if (not p^.IsRom) then
      Begin
       p^.Memory[offs]:=Value;

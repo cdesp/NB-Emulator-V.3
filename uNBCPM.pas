@@ -218,7 +218,7 @@ Var
 
 implementation
 
-uses new,sysutils,uNBMemory,math,dialogs;
+uses new,sysutils,uNBMemory,math,dialogs,forms;
 
 { TNBDISCCtrl }
 
@@ -965,11 +965,22 @@ Begin
 
   //1.Get Directory Files
   FileList:=tStringlist.Create;
+ if directoryexists(pth+Dir) then
+ begin
   GetFiles(pth+Dir,'Files',FileList);
   If (Filelist.count=0) then
   begin
     if FileExists(pth+Dir+'.dsk') then
-      ReadDisk(pth+Dir+'.dsk')
+    begin
+     ReadDisk(pth+Dir+'.dsk');
+     dir2 := '';
+     sleep(300);
+     application.processmessages;
+     Dir2 := Dir;
+     FileList.free;
+     exit;
+     //GetFiles(pth+Dir,'Files',FileList);
+    end
     else
     if FileExists(pth+Dir+'.img') then
       ReadDisk(pth+Dir+'.img');
@@ -983,13 +994,13 @@ Begin
   For i:=0 to Filelist.count-1 do
    DeleteFile(pth+Dir+'\'+Filelist[i]);
 
- if diskno=0 then
-  DirListA.Assign(Filelist)
- else
-  DirListB.Assign(Filelist);
-
- Filelist.free;
- WriteDisk(pth+Dir+'.dsk');
+  if diskno=0 then
+   DirListA.Assign(Filelist)
+  else
+   DirListB.Assign(Filelist);
+ end;
+  Filelist.free;
+  WriteDisk(pth+Dir+'.dsk');
 End;
 
 

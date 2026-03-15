@@ -2,7 +2,6 @@ program NewBrain;
 
 uses
   Vcl.Forms,
-  debug in 'debug.pas' {Form2},
   frmAbout in 'frmAbout.pas' {fAbout},
   frmChrDsgn in 'frmChrDsgn.pas' {fchrdsgn},
   frmCPUWin in 'frmCPUWin.pas' {fCPUWin},
@@ -41,8 +40,7 @@ uses
   uz80dsm in 'uz80dsm.pas' {frmDisasm},
   Z80Intf in 'Z80Intf.pas',
   Z80BaseClass in 'Z80Package\Z80BaseClass.pas' {$R *.res},
-  uNBCassette in 'uNBCassette.pas',
-  uNBColorScreen in 'uNBColorScreen.pas';
+  uNBCassette in 'uNBCassette.pas';
 
 {$R *.res}
 

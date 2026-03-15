@@ -45,10 +45,7 @@ object fRomVersion: TfRomVersion
       'Version 1.91'
       'Version 2.00 Original'
       'Version 2.00 No Ram Check'
-      'Version 2.00 Compiled by EMULATOR'
-      'Modular Newbrain by CDesp'
-      'Modular Newbrain with PAGING by CDesp'
-      'Bootloader')
+      'Version 2.00 Compiled by EMULATOR')
     TabOrder = 2
   end
 end

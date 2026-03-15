@@ -146,6 +146,9 @@ procedure Tfchrdsgn.Timer1Timer(Sender: TObject);
 var i:Integer;
     x,y:Integer;
 begin
+ if not chrscr.CanDraw then exit;
+
+
  chrscr.Surface.Fill(0);
 
  x:=6;y:=6 ;
@@ -275,6 +278,7 @@ begin
   else
    getchar8;
 
+  try
   for y:=0 to lengy-1 do
    for x:=1 to lengx do
    Begin
@@ -284,6 +288,8 @@ begin
      else
        chrscr.Surface.Canvas.Pixels[cx*lengx+x-1,cy*lengy+y]:=clBlack;
    End;
+   except
+   end;
 end;
 
 

@@ -158,6 +158,7 @@ var k:integer;
     s:string;
 Begin
   //2.65
+  try
   k:=pos('.',c)+2;
   if k=0 then exit;
   s:=copy(c,k+1,maxint);
@@ -167,6 +168,11 @@ Begin
   k:=pos('A',s);
   if k=0 then  k:=pos('B',s);
   if k>0 then beta:=strtoint(copy(s,k+1,2));
+  except
+     ver:=0;
+     subv:=0;
+     beta:=0;
+  end;
 End;
 
 function TfrmUpdate.CheckVersion(var vfn:string):boolean;
