@@ -361,7 +361,7 @@ begin
     $08: // CASSCOM
       begin
 {$IFDEF NBDEBUG}
-        s := 'CASSCOM' + '  ENREG:' + inttohex(nbio.EnableReg);
+        ODS( 'CASSCOM' + '  ENREG:' + inttohex(nbio.EnableReg));
         // CASSCOM      1
 {$ENDIF}
         if CopData and $08 = $08 then // TAPE 1 Command
@@ -380,7 +380,7 @@ begin
         if CopData and PLAYBK = PLAYBK then // Loading
         begin
 {$IFDEF NBDEBUG}
-          s := 'CASSLOAD' + '  ENREG:' + inttohex(nbio.EnableReg);
+          ODS( 'CASSLOAD' + '  ENREG:' + inttohex(nbio.EnableReg));
           // CASSCOM      1
 {$ENDIF}
           if not Cassette.Loading then
@@ -418,41 +418,42 @@ begin
             NextCopOutIsData := true;
         end;
       end;
-    $09: {$IFDEF NBDEBUG} s := 'PASSCOM' + ' ENREG:' + inttohex(nbio.EnableReg)
+    $09: {$IFDEF NBDEBUG} ODS( 'PASSCOM' + ' ENREG:' + inttohex(nbio.EnableReg))
 {$ENDIF}; // PASSCOM
     $0A: // DISPCOM
       begin
 {$IFDEF NBDEBUG}
-        s := 'DISPCOM ' + ' ENREG:' + inttohex(nbio.EnableReg); {$ENDIF} // DISPCOM      1 for vf display
+        ODS( 'DISPCOM ' + ' ENREG:' + inttohex(nbio.EnableReg)); {$ENDIF} // DISPCOM      1 for vf display
         vfbuf := '';
         ods(inttohex(z80_get_reg(Z80_REG_IFF1), 4));
         NextCopOutIsData := true; // Cop will get 18 bytes
       end;
-    $0B: {$IFDEF NBDEBUG} s := 'TIMCOM' {$ENDIF}; // TIMCOM       1
-    $0C: {$IFDEF NBDEBUG} s := 'PDNCOM' {$ENDIF}; // PDNCOM
+    $0B: {$IFDEF NBDEBUG}ODS( 'TIMCOM') {$ENDIF}; // TIMCOM       1
+    $0C: {$IFDEF NBDEBUG} ODS('PDNCOM') {$ENDIF}; // PDNCOM
     $0D: // NULLCOM
       begin
 {$IFDEF NBDEBUG}
-        s := 'NULLCOM' + ' ENREG:' + inttohex(nbio.EnableReg); {$ENDIF}
+        ODS( 'NULLCOM' + ' ENREG:' + inttohex(nbio.EnableReg)); {$ENDIF}
         if (Cassette <> nil) and Cassette.Saving then
         begin
           Cassette.closecomm;
           Cassette.Saving := false;
         end;
       end;
-    $0E0: {$IFDEF NBDEBUG} s := '???COM' {$ENDIF};
-    $0F0: {$IFDEF NBDEBUG} s := 'RESCOM' {$ENDIF}; // RESCOM
+    $0E0: {$IFDEF NBDEBUG} ODS( '???COM') {$ENDIF};
+    $0F0: {$IFDEF NBDEBUG} ODS( 'RESCOM') {$ENDIF}; // RESCOM
   else
     Begin
 {$IFDEF NBDEBUG}
-      ODS('LastCop Cmd=' + s + ' ' + inttostr(Value)); {$ENDIF}
+//      ODS('LastCop Cmd=' + s + ' ' + inttostr(Value));
+{$ENDIF}
       exit;
     End;
   end; // end case
 
 {$IFDEF NBDEBUG}
-  if Value <> $0D0 then
-    ODS(s);
+//  if Value <> $0D0 then
+  //  ODS(s);
 {$ENDIF}
   LastCopCommand := Value;
 

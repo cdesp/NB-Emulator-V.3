@@ -130,7 +130,7 @@ constructor TNBInOutSupport.Create;
 begin
   inherited;
   TVEnabled := false;
-  AciaInt := false;
+  AciaInt := True;  //false means we have an int
   KeyPressed := $80;
   PRNDataBusInt := false; // Centronics printer
   pn := 0;
@@ -749,7 +749,6 @@ function TNBInOutSupport.DoPort6In(Value: Byte): Byte;
 // bits 0-2 goes to Copst
 Begin
   result:=0;
-  if prepc<$E000 then exit;// for modular NB hardware we use this to get keys
 
 
   InterruptServed := true;
@@ -780,8 +779,6 @@ procedure TNBInOutSupport.DoPort7Out(Value: Byte);
 
 Begin
 
-  if nbmem.ismodular then
-    RomWriteAble:=false; //NB is running
 
   // if value<>14 then
   // ODS('port 7='+inttostr(value));

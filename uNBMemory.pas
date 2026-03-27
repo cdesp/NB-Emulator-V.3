@@ -48,7 +48,6 @@ Type
      Fpath: string;
      LastPage: integer;
      Procedure Init;
-     function IsModular: Boolean;
      procedure LoadRom(FromPageNo: Byte; FName: String; NextForward: Boolean = True);
      procedure SetPageInSlot(Slot,Page:integer;Alt:Boolean);
      function GetDirectMem(Const Page,Addr:Integer): Byte;
@@ -217,10 +216,6 @@ Begin
    Result:=fnewbrain.Withpibox.checked ;
 End;
 
-Function TNBMemory.IsModular:Boolean;
-Begin
-  result:=vers=0;
-End;
 
 procedure TNBMemory.Init;
 Var i:Integer;
@@ -563,7 +558,9 @@ begin
    Begin
      if p^.Page=-1 then
      Begin
-//       ODS('Error. Try to Write on empty slot.'+inttostr(Addr));
+      {$IFDef NBPGDEBUG}
+         ODS('Error. Try to Write on empty slot.'+inttostr(Addr));
+      {$ENDIF}
        Exit;
      End;
 

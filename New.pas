@@ -1105,8 +1105,8 @@ procedure TfNewBrain.Timer1Timer(Sender: TObject);
 begin
   if Debug2.Checked then
     nbscreen.paintDebug;
-  if assigned(nbmem) and nbmem.IsModular then
-   nbscreen.PaintVideo;
+//  if assigned(nbmem) and nbmem.IsModular then
+ //  nbscreen.PaintVideo;
 end;
 
 var
@@ -1186,10 +1186,8 @@ Begin
   if sle = nil then
     sle := TStringlist.Create;
   if bootok and ((NBkey = $80) or (NBkey = 0)) and cop420.KBEnabled then
-    CheckKeyBoard
-  else
-   if nbmem.IsModular then
-       CheckKeyBoard;
+    CheckKeyBoard;
+
   If Debugging then
   Begin
     if emuled >= St then
@@ -2170,16 +2168,6 @@ begin
       inc(DebugTimer);
   end;
 
-  if nbmem.IsModular then
-  begin
-    if ModScrTimer > 10 then
-    Begin
-      nbscreen.PaintVideo;
-      ModScrTimer := 0
-    end
-    Else
-      inc(ModScrTimer);
-  end;
 
 end;
 

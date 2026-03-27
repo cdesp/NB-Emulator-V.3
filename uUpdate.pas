@@ -50,6 +50,8 @@ type
   public
     { Public declarations }
     cVers:String;
+    msg:String;
+    Newver,Curver:String;
     function CheckVersion(var vfn:string):boolean;
   end;
 
@@ -68,9 +70,19 @@ CONST InetFile1='ssleay32.dll';
 
 
 procedure TfrmUpdate.ConnectToSite;
-Var s:String[40];
+Var s:String[250];
    ms:TStringStream;
    c:integer;
+
+   Procedure SplitUpd;
+   var k:integer;
+   begin
+     k:=pos(chr(13),s);
+     if k=0 then exit;
+     msg:=copy(s,k+2,maxint);
+     s:=copy(s,1,k-1);
+   end;
+
 Begin
   if not fileexists(ExtractFilePath(Application.exename)+InetFile1) then
   begin
@@ -93,7 +105,9 @@ Begin
     Idhttp1.get(mainsite+'version3.ver',ms);
     ms.position:=0;
     c:=ms.Size;
-    s:=ms.ReadString(c) ;
+    s:=ms.ReadString(c);
+    SplitUpd;
+//    msg:=ms.ReadString(c);
 //    ms.SaveToFile('g:\version.txt');
    except
       on e:exception do
@@ -176,7 +190,7 @@ Begin
 End;
 
 function TfrmUpdate.CheckVersion(var vfn:string):boolean;
-Var Newver,Curver:String;
+Var
     nv,nsv,nb:integer;
     cv,csv,cb:integer;
 Begin
@@ -200,12 +214,24 @@ End;
 
 procedure TfrmUpdate.Button1Click(Sender: TObject);
 Var fn,verfn:String;
-
+    ms:string;
 begin
 // ConnectToSite;
 // if listbox1.Items.Count>0 then
   if CheckVersion(verfn) then
-    DownloadUpdate(verfn);
+  begin
+    ms:='A new version '+newver+' is available!!!'#13#10;
+    if msg<>'' then
+     ms:=ms+#13#10+msg+#13#10#13#10;
+    ms:=ms+'Do you want to download the new version?';
+    if MessageDlg(ms,mtConfirmation,[mbYes, mbNo],0, mbYes)=mrYes then
+     DownloadUpdate(verfn)
+    else
+    begin
+     hide;
+     exit;
+    end;
+  end;
  if newupdate then
  Begin
    Showmessage('A new version has been downloaded.'#13#10'Click OK to Update and Restart the emulator.');
