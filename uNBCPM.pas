@@ -218,7 +218,8 @@ Var
 
 implementation
 
-uses new,sysutils,uNBMemory,math,dialogs,forms;
+uses new,sysutils,uNBMemory,math,dialogs,forms,
+     System.IOUtils;
 
 { TNBDISCCtrl }
 
@@ -698,6 +699,7 @@ begin
   End;
 end;
 
+//Creates files on a directory from a .dsk file
 procedure TNBDISCCtrl.MakeDir(Dir:AnsiString);
 Var DirEntryNo:Integer;
     DirEnt:TDirEntryNormal;
@@ -731,6 +733,9 @@ Var DirEntryNo:Integer;
       ForceDirectories(pth);
       Fn:=trim(Dirent.FName)+'.'+trim(Dirent.Ext);
       Offs:=GetOffsetByAlu(dirent.alu[0]);
+      if TFile.Exists(pth+Fn) then
+       if TFileAttribute.faReadOnly in TFile.GetAttributes(pth+Fn) then exit; //no save on read only files
+
       Assignfile(f,pth+Fn);
       if not fileexists(pth+Fn) then
       Begin
@@ -754,27 +759,37 @@ Var DirEntryNo:Integer;
 
 
 Var i:integer;
+   deldsk:boolean;
 begin
   pth:=AppPath+'Discs\'+Dir+'\';
 
   DirEntryNo:=0;
   lastextent:=0;
+  deldsk:=true;
   For i:=0 to 128 do
   Begin
+   try
     ReadDirEntry ;
+    if Dirent.Userno=$e5 then Break;
     if (i=0) then
     Begin
       if (dirent.Userno>2) or (dirent.FName[0]=#0) then
       Begin
-        raise exception.Create('Invalid Image');
+        deldsk:=false;
+        raise exception.Create('Invalid Image - Dir filename=['+dirent.FName+']');
       end;
     end;
-    if Dirent.Userno=$e5 then Break;
     SaveFile;
+   except
+    on e:exception do
+     Showmessage(e.Message);
+   end;
   End;
-  DeleteFile(AppPath+'Discs\'+Dir+'.dsk');
+  if deldsk then
+   DeleteFile(AppPath+'Discs\'+Dir+'.dsk');
 end;
 
+//creates a NB Disc image from a directory
 procedure TNBDISCCtrl.MakeDisk(Dir: AnsiString);
 Var FileList:tStringlist;
     i:integer;
@@ -950,6 +965,8 @@ Var FileList:tStringlist;
        CloseFile(f);
      End;
     End;
+
+Var msg1:String;
 Begin
   pth:=AppPath+'Discs\';
   Alocs:=1;
@@ -990,9 +1007,15 @@ Begin
  //2.Make Directory and Put Files
   For i:=0 to Filelist.count-1 do
    AddEntry(Uppercase(Filelist[i]));
-
+  msg1:='';
   For i:=0 to Filelist.count-1 do
-   DeleteFile(pth+Dir+'\'+Filelist[i]);
+  if not DeleteFile(pth+Dir+'\'+Filelist[i]) then
+  begin
+    msg1:=msg1+Filelist[i]+', ';
+  end;
+
+  if msg1<>'' then
+   Showmessage('Disc:'+dir+#13#10'File/s: '+msg1+' cannot be deleted. Probably is/are Read Only.'#13#10#13#10'Emulator needs these files to be writable to function properly.');
 
   if diskno=0 then
    DirListA.Assign(Filelist)

@@ -31,10 +31,12 @@ type
     ListBox1: TListBox;
     SpeedButton1: TSpeedButton;
     SpeedButton2: TSpeedButton;
+    Label1: TLabel;
     procedure SpeedButton1Click(Sender: TObject);
     procedure SpeedButton2Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure ListBox1DblClick(Sender: TObject);
+    procedure Label1Click(Sender: TObject);
   private
     { Private declarations }
     curinfo:integer;
@@ -60,12 +62,15 @@ begin
   0: Begin
        listbox1.Items.assign(NBDISCCtrl.DirListA);
        listbox1.Font.Color:=clGreen;
+       Label1.Caption:=NBDISCCtrl.Dir1;
      End;
   1: Begin
        listbox1.Items.assign(NBDISCCtrl.DirListB);
        listbox1.Font.color:=clRed;
+       Label1.Caption:=NBDISCCtrl.Dir2;
      End;
  End;
+ Label1.Color:=listbox1.Font.Color;
  curinfo:=drvno;
 end;
 
@@ -95,6 +100,11 @@ begin
 end;
 
 //Auto Load the program
+procedure TfDrvInfo.Label1Click(Sender: TObject);
+begin
+  fnewbrain.acDiskmanagement.execute;
+end;
+
 procedure TfDrvInfo.ListBox1DblClick(Sender: TObject);
 Var s:String;
 begin

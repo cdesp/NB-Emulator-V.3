@@ -1583,6 +1583,8 @@ var
   s: String;
   i: Integer;
 begin
+    SuspendEmul;
+
     if Assigned(nbdiscctrl) then
     Begin
       SaveDiskNames;
@@ -1599,7 +1601,7 @@ begin
         ODS(e.Message);
       end;
     End;
-  IsSuspended := true;
+
   // sleep(1000);
   try
     if Assigned(dbgsl) then
@@ -1623,6 +1625,8 @@ begin
     newdebug.Close;
   if Assigned(frmdis) then
     frmdis.Close;
+  if Assigned(fDrvInfo) then
+    fDrvInfo.Close;
 
 end;
 
@@ -1805,7 +1809,6 @@ begin
   try
     nbdiscctrl.dir1 := inif.ReadString('DISK', 'DIR1', nbdiscctrl.dir1);
     nbdiscctrl.dir2 := inif.ReadString('DISK', 'DIR2', nbdiscctrl.dir2);
-
   Finally
     inif.free;
   End;
