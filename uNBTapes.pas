@@ -24,11 +24,17 @@ interface
 uses classes;
 
 Type
+
+  TTapeInfo = Class;
+
+  TOnTapeChange= procedure (Sender: TTapeInfo);
+
   TTapeInfo = Class
   private
     FCurrentFile: Integer;
     FDirectory: String;
     FTapeName: String;
+    fOnTapeChange:TOnTapeChange;
     procedure UpdateVI;
     procedure SetDirectory(const Value: String);
     procedure setCurrentFile(const Value: Integer);
@@ -48,6 +54,7 @@ Type
     procedure Eject;
     function GetNextFileName: string;
     procedure AddFile(fn: String);
+    property OnTapeChange:TOnTapeChange read FOnTapeChange write FOnTapeChange;
     property TapeName: string read FTapeName write setTapeName;
     property CurrentFile: Integer read FCurrentFile write setCurrentFile;
     property Directory: String read FDirectory write SetDirectory;
@@ -78,6 +85,8 @@ begin
   begin
     FCurrentFile := Value;
     UpdateVI;
+    if assigned(fOnTapeChange) then
+      fOnTapeChange(self);
   end;
 
 end;

@@ -261,6 +261,10 @@ function TCop420.GetFromCop: byte;
             for i := 1 to 9 do // read 9 zeroes
               filegetbyte;
             Result := t;
+            if Cassette.ByteCounter>0 then //if 0 then we already closed the file and proceed to the next
+              if Tapeblock.TPType and 64=64 then //lastblock = bit 6
+                Cassette.CloseComm;
+
           end;
       end;
 

@@ -50,6 +50,7 @@ Type
     procedure SetFilename(Value: String);
     procedure setTapeNo(const Value: Integer);
     procedure UpdateVi;
+    procedure OnTapeChange(Sender: TTapeInfo);
   public
     CassError: Boolean;
     ResetTape: Boolean;
@@ -66,6 +67,7 @@ Type
     property saving: Boolean read getSaving write setSaving;
     property Filename: String read FFilename write SetFilename;
     property TapeNo: Integer read FTapeNo write setTapeNo;
+    property ByteCounter:integer read comcnt;
   end;
 
 implementation
@@ -77,6 +79,7 @@ uses sysutils, forms, new, uNbTypes, uNBIO;
 constructor TNBCassette.Create;
 begin
   TapeInfo := TTapeInfo.Create;
+  TapeInfo.OnTapeChange:=OnTapeChange;
   Filename := 'NoName';
   DeleteNoName;
   state := csIdle;
@@ -252,6 +255,18 @@ Begin
 
 End;
 
+procedure TNBCassette.OnTapeChange(Sender:TTapeInfo);
+Begin
+   if (sender=TapeInfo)then
+   begin
+      if Commopened then
+      begin
+        closefile(cf);
+        Commopened:=false;
+      end;
+   end;
+End;
+
 procedure TNBCassette.OpenCassette(ToRead: Boolean = false);
 var
   Fname: String;
@@ -281,6 +296,7 @@ Begin
   Begin
     reset(cf);
     size := FileSize(cf);
+    comcnt:=0;
   End
   else
   begin
@@ -306,6 +322,7 @@ Begin
   if Commopened then
   Begin
     closefile(cf);
+    Commopened := false;
     if saving then
     Begin
       if CheckFileEnd then
@@ -329,7 +346,7 @@ Begin
     Filename := TapeInfo.GetNextFileName;
   End;
 
-  Commopened := false;
+
   NBIO.CopInt := false;
 End;
 
